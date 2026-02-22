@@ -18,12 +18,9 @@ RUN npx prisma generate
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-# Expose port
-EXPOSE 3000
-
-ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV NODE_ENV=production
 
 # Push DB schema and start the app
-CMD npx prisma db push && npm start
+# Railway sets PORT dynamically - next start respects PORT env var
+CMD ["sh", "-c", "npx prisma db push && npx next start -H 0.0.0.0 -p ${PORT:-3000}"]
