@@ -13,6 +13,7 @@ import EarnPage from "@/components/EarnPage";
 import MyOffersPage from "@/components/MyOffersPage";
 import CashoutPage from "@/components/CashoutPage";
 import RewardsPage from "@/components/RewardsPage";
+import OnboardingModal from "@/components/OnboardingModal";
 
 const tabs = [
   { id: "earn", label: "Earn", icon: Search },
@@ -43,6 +44,7 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasClaimableDailyReward, setHasClaimableDailyReward] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Fetch user data from API
   const fetchUserData = useCallback(async () => {
@@ -98,6 +100,23 @@ export default function DashboardPage() {
       if (typeof user.streak === "number") setStreak(user.streak);
     }
   }, [session]);
+
+  // Show onboarding for first-time users
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      const onboardingKey = `cashblitz_onboarded_${session.user.email}`;
+      if (!localStorage.getItem(onboardingKey)) {
+        setShowOnboarding(true);
+      }
+    }
+  }, [status, session]);
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    if (session?.user?.email) {
+      localStorage.setItem(`cashblitz_onboarded_${session.user.email}`, "true");
+    }
+  };
 
   const markNotificationsRead = async () => {
     try {
@@ -461,6 +480,16 @@ export default function DashboardPage() {
           })}
         </div>
       </nav>
+
+      {/* ══════ Onboarding Modal ══════ */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <OnboardingModal
+            onComplete={handleOnboardingComplete}
+            userName={session.user?.name || undefined}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
+import ReferralCard from "./ReferralCard";
+import TransactionHistory from "./TransactionHistory";
 
 const achievements = [
   { id: "first_offer", name: "First Offer", desc: "Complete your first offer", icon: Star, color: "text-accent-2" },
@@ -252,6 +254,14 @@ export default function RewardsPage() {
               </div>
             </div>
             <span className="text-lg font-extrabold text-orange-500">{stats?.streak || 0} days</span>
+          </div>
+
+          {/* Referral Card */}
+          <ReferralCard />
+
+          {/* Transaction History */}
+          <div className="bg-surface rounded-2xl p-3.5 border border-border mb-3">
+            <TransactionHistory />
           </div>
 
           {/* Started offers */}

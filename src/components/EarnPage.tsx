@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import OfferCard from "./OfferCard";
 import OfferModal from "./OfferModal";
 import SpinWheel from "./SpinWheel";
+import LiveActivityFeed from "./LiveActivityFeed";
 
 interface Reward {
   id: string;
@@ -456,6 +457,18 @@ export default function EarnPage() {
             <ChevronRight size={18} className="text-muted flex-shrink-0" />
           </motion.div>
         </div>
+
+        {/* Live Activity Feed */}
+        <div className="px-4 mb-4">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </span>
+            <h3 className="text-xs font-bold text-muted">Live Activity</h3>
+          </div>
+          <LiveActivityFeed />
+        </div>
       </div>
 
       {/* Offer modal */}
@@ -477,6 +490,7 @@ export default function EarnPage() {
               setShowSpin(false);
               refreshBalance();
             }}
+            onBalanceUpdate={refreshBalance}
           />
         )}
       </AnimatePresence>
