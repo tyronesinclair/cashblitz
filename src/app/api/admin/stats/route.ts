@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { isAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
-
-async function isAdmin() {
-  const session = await auth();
-  return session?.user && (session.user as Record<string, unknown>).role === "admin";
-}
 
 export async function GET() {
   if (!(await isAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -23,6 +18,11 @@ export async function GET() {
     recentUsers,
     topEarners,
     premiumOfferCount,
+    pendingPayouts,
+    totalPayoutsAgg,
+    totalTransactions,
+    totalReferrals,
+    totalSpins,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.offer.count(),
@@ -34,15 +34,20 @@ export async function GET() {
     prisma.user.findMany({
       take: 10,
       orderBy: { createdAt: "desc" },
-      select: { id: true, name: true, email: true, balance: true, totalEarnings: true, createdAt: true, role: true },
+      select: { id: true, name: true, email: true, balance: true, totalEarnings: true, createdAt: true, role: true, streak: true, level: true },
     }),
     prisma.user.findMany({
       take: 5,
       orderBy: { totalEarnings: "desc" },
       where: { role: "user" },
-      select: { id: true, name: true, email: true, totalEarnings: true },
+      select: { id: true, name: true, email: true, totalEarnings: true, level: true },
     }),
     prisma.offer.count({ where: { isPremium: true } }),
+    prisma.payout.count({ where: { status: "pending" } }),
+    prisma.payout.aggregate({ where: { status: "completed" }, _sum: { amount: true } }),
+    prisma.transaction.count(),
+    prisma.referral.count(),
+    prisma.dailySpin.count(),
   ]);
 
   return NextResponse.json({
@@ -56,5 +61,10 @@ export async function GET() {
     completedUserOffers,
     recentUsers,
     topEarners,
+    pendingPayouts,
+    totalPayoutsProcessed: totalPayoutsAgg._sum.amount || 0,
+    totalTransactions,
+    totalReferrals,
+    totalSpins,
   });
 }

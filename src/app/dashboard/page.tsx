@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   Search, FileText, DollarSign, Gift, Bell, Flame, Zap,
-  LogOut, Shield, ChevronRight, User, Settings, Home
+  LogOut, Shield, ChevronRight, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EarnPage from "@/components/EarnPage";
@@ -21,16 +21,119 @@ const tabs = [
   { id: "rewards", label: "Rewards", icon: Gift },
 ];
 
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("earn");
+
+  // Real dynamic data
+  const [balance, setBalance] = useState<number>(0);
+  const [streak, setStreak] = useState<number>(0);
+  const [activeOfferCount, setActiveOfferCount] = useState<number>(0);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [hasClaimableDailyReward, setHasClaimableDailyReward] = useState(false);
+
+  // Fetch user data from API
+  const fetchUserData = useCallback(async () => {
+    try {
+      const [balanceRes, notifRes, dailyRes] = await Promise.all([
+        fetch("/api/user/balance"),
+        fetch("/api/user/notifications"),
+        fetch("/api/daily-reward"),
+      ]);
+
+      if (balanceRes.ok) {
+        const data = await balanceRes.json();
+        setBalance(data.balance);
+        setStreak(data.streak);
+        setActiveOfferCount(data.activeOfferCount);
+      }
+
+      if (notifRes.ok) {
+        const data = await notifRes.json();
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
+      }
+
+      if (dailyRes.ok) {
+        const data = await dailyRes.json();
+        setHasClaimableDailyReward(!data.claimedToday);
+      }
+    } catch {
+      // Silent fail — use session data as fallback
+    }
+  }, []);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
   }, [status, router]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchUserData();
+      // Refresh every 30 seconds
+      const interval = setInterval(fetchUserData, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [status, fetchUserData]);
+
+  // Use session data as initial fallback
+  useEffect(() => {
+    if (session?.user) {
+      const user = session.user as Record<string, unknown>;
+      if (typeof user.balance === "number") setBalance(user.balance);
+      if (typeof user.streak === "number") setStreak(user.streak);
+    }
+  }, [session]);
+
+  const markNotificationsRead = async () => {
+    try {
+      await fetch("/api/user/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAll: true }),
+      });
+      setUnreadCount(0);
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch {
+      // Silent fail
+    }
+  };
+
+  const toggleNotifications = () => {
+    setShowNotifications(!showNotifications);
+    if (!showNotifications && unreadCount > 0) {
+      markNotificationsRead();
+    }
+  };
+
+  const getTimeAgo = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return "Yesterday";
+    return `${diffDays}d ago`;
+  };
 
   if (status === "loading") {
     return (
@@ -49,7 +152,6 @@ export default function DashboardPage() {
   if (!session) return null;
 
   const userRole = (session.user as Record<string, unknown>)?.role as string;
-  const userBalance = (session.user as Record<string, unknown>)?.balance as number ?? 0;
 
   return (
     <div className="min-h-dvh bg-background flex">
@@ -70,11 +172,13 @@ export default function DashboardPage() {
         <div className="mx-4 mt-4 mb-2 p-3.5 bg-gradient-to-br from-primary/10 to-primary-dark/5 border border-primary/20 rounded-2xl">
           <p className="text-[10px] text-muted font-medium">Available Balance</p>
           <p className="text-2xl font-extrabold text-foreground mt-0.5">
-            CAD {userBalance.toFixed(2)}
+            CAD {balance.toFixed(2)}
           </p>
           <div className="flex items-center gap-1 mt-1">
             <Flame size={12} className="text-orange-500" />
-            <span className="text-[10px] text-muted font-medium">0 day streak</span>
+            <span className="text-[10px] text-muted font-medium">
+              {streak > 0 ? `${streak} day streak 🔥` : "Start your streak!"}
+            </span>
           </div>
         </div>
 
@@ -95,8 +199,13 @@ export default function DashboardPage() {
               >
                 <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                 {tab.label}
-                {tab.id === "my-offers" && (
-                  <span className="ml-auto text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold">3</span>
+                {tab.id === "my-offers" && activeOfferCount > 0 && (
+                  <span className="ml-auto text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold">
+                    {activeOfferCount}
+                  </span>
+                )}
+                {tab.id === "rewards" && hasClaimableDailyReward && (
+                  <span className="ml-auto w-2 h-2 bg-danger rounded-full" />
                 )}
               </button>
             );
@@ -170,7 +279,7 @@ export default function DashboardPage() {
                 className="flex items-center gap-1 bg-surface-light rounded-full px-2.5 py-1.5"
               >
                 <Flame size={14} className="text-orange-500" />
-                <span className="text-xs font-bold text-foreground">0</span>
+                <span className="text-xs font-bold text-foreground">{streak}</span>
               </motion.div>
 
               <motion.div
@@ -178,15 +287,20 @@ export default function DashboardPage() {
                 className="flex items-center gap-1 bg-primary/10 border border-primary/25 rounded-full px-2.5 py-1.5"
               >
                 <span className="text-[10px] text-primary font-semibold">CAD</span>
-                <span className="text-xs font-bold text-primary">{userBalance.toFixed(2)}</span>
+                <span className="text-xs font-bold text-primary">{balance.toFixed(2)}</span>
               </motion.div>
 
               <motion.button
                 whileTap={{ scale: 0.9 }}
+                onClick={toggleNotifications}
                 className="relative p-1.5 text-muted"
               >
                 <Bell size={20} />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 min-w-[14px] h-[14px] bg-danger rounded-full flex items-center justify-center px-0.5">
+                    <span className="text-[8px] font-bold text-white">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                  </span>
+                )}
               </motion.button>
             </div>
           </div>
@@ -205,13 +319,75 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <motion.button
               whileTap={{ scale: 0.95 }}
+              onClick={toggleNotifications}
               className="relative p-2 text-muted hover:text-foreground transition-colors"
             >
               <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 min-w-[14px] h-[14px] bg-danger rounded-full flex items-center justify-center px-0.5">
+                  <span className="text-[8px] font-bold text-white">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                </span>
+              )}
             </motion.button>
           </div>
         </header>
+
+        {/* ══════ Notification Panel ══════ */}
+        <AnimatePresence>
+          {showNotifications && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="fixed lg:absolute top-0 lg:top-14 right-0 lg:right-4 z-50 w-full lg:w-96 max-h-[70vh] bg-surface border border-border rounded-b-2xl lg:rounded-2xl shadow-2xl overflow-hidden"
+            >
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <h3 className="text-sm font-bold text-foreground">Notifications</h3>
+                <button
+                  onClick={() => setShowNotifications(false)}
+                  className="p-1 text-muted hover:text-foreground press-scale"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="overflow-y-auto max-h-[60vh]">
+                {notifications.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Bell size={24} className="text-muted mx-auto mb-2" />
+                    <p className="text-sm text-muted">No notifications yet</p>
+                  </div>
+                ) : (
+                  notifications.slice(0, 20).map((notif) => (
+                    <div
+                      key={notif.id}
+                      className={`p-3 border-b border-border last:border-0 ${
+                        !notif.isRead ? "bg-primary/5" : ""
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-foreground">{notif.title}</p>
+                          <p className="text-[11px] text-muted mt-0.5">{notif.message}</p>
+                        </div>
+                        <span className="text-[9px] text-muted flex-shrink-0">
+                          {getTimeAgo(notif.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Backdrop for notifications on mobile */}
+        {showNotifications && (
+          <div
+            className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+            onClick={() => setShowNotifications(false)}
+          />
+        )}
 
         {/* ══════ Page Content ══════ */}
         <main className="max-w-5xl mx-auto">
@@ -260,16 +436,16 @@ export default function DashboardPage() {
                     }`}
                     strokeWidth={isActive ? 2.5 : 2}
                   />
-                  {tab.id === "my-offers" && (
+                  {tab.id === "my-offers" && activeOfferCount > 0 && (
                     <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 bg-primary rounded-full flex items-center justify-center px-1"
                     >
-                      <span className="text-[9px] font-bold text-background">3</span>
+                      <span className="text-[9px] font-bold text-background">{activeOfferCount}</span>
                     </motion.span>
                   )}
-                  {tab.id === "rewards" && (
+                  {tab.id === "rewards" && hasClaimableDailyReward && (
                     <span className="absolute -top-0.5 -right-1 w-2.5 h-2.5 bg-danger rounded-full border border-surface" />
                   )}
                 </div>

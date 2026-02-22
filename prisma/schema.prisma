@@ -19,13 +19,31 @@ model User {
   balance       Float     @default(0)
   totalEarnings Float     @default(0)
   level         Int       @default(0)
+  xp            Int       @default(0)
   streak        Int       @default(0)
+  lastLoginAt   DateTime?
+  lastSpinAt    DateTime?
+  referralCode  String?   @unique
+  referredBy    String?
+  isBanned      Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  userOffers    UserOffer[]
+  accounts         Account[]
+  sessions         Session[]
+  userOffers       UserOffer[]
+  payouts          Payout[]
+  transactions     Transaction[]
+  dailyRewards     DailyReward[]
+  spins            DailySpin[]
+  achievements     UserAchievement[]
+  notifications    Notification[]
+  referralsGiven   Referral[]       @relation("Referrer")
+  referralsReceived Referral[]      @relation("Referred")
+
+  @@index([role])
+  @@index([referralCode])
+  @@index([email])
 }
 
 model Account {
@@ -80,11 +98,19 @@ model Offer {
   steps         String   // JSON array stored as string
   newUsersOnly  Boolean  @default(true)
   rewardMultiplier Int   @default(1)
+  externalUrl   String?
+  provider      String?  // offer wall provider
+  sortOrder     Int      @default(0)
+  completionCount Int    @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   rewards       Reward[]
   userOffers    UserOffer[]
+
+  @@index([isActive])
+  @@index([category])
+  @@index([platform])
 }
 
 model Reward {
@@ -98,20 +124,168 @@ model Reward {
   sortOrder   Int     @default(0)
 
   offer       Offer   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@index([offerId])
 }
 
 // ─── User Progress ──────────────────────────────────
 model UserOffer {
-  id          String   @id @default(cuid())
-  userId      String
-  offerId     String
-  status      String   @default("active") // active | completed | abandoned
-  earned      Float    @default(0)
-  startedAt   DateTime @default(now())
-  completedAt DateTime?
+  id             String   @id @default(cuid())
+  userId         String
+  offerId        String
+  status         String   @default("active") // active | completed | abandoned
+  earned         Float    @default(0)
+  completedTasks String   @default("[]") // JSON array of completed reward IDs
+  trackingId     String?  @unique
+  startedAt      DateTime @default(now())
+  completedAt    DateTime?
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  offer       Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offer          Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
 
   @@unique([userId, offerId])
+  @@index([userId])
+  @@index([offerId])
+  @@index([status])
+}
+
+// ─── Payouts / Withdrawals ──────────────────────────
+model Payout {
+  id             String   @id @default(cuid())
+  userId         String
+  amount         Float
+  method         String   // paypal | amazon | bitcoin | visa | apple | steam
+  status         String   @default("pending") // pending | processing | completed | rejected
+  paymentDetails String?  // JSON - email for PayPal, wallet for crypto, etc.
+  processedAt    DateTime?
+  rejectedReason String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ─── Transaction / Activity Log ─────────────────────
+model Transaction {
+  id            String   @id @default(cuid())
+  userId        String
+  type          String   // earn | withdraw | spin | referral | daily_bonus | admin_adjustment | signup_bonus
+  amount        Float
+  balanceBefore Float
+  balanceAfter  Float
+  description   String
+  metadata      String?  // JSON for extra context
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ─── Referrals ──────────────────────────────────────
+model Referral {
+  id          String   @id @default(cuid())
+  referrerId  String
+  referredId  String
+  bonusAmount Float    @default(5.00)
+  status      String   @default("pending") // pending | completed
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  referrer    User     @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referred    User     @relation("Referred", fields: [referredId], references: [id], onDelete: Cascade)
+
+  @@unique([referrerId, referredId])
+  @@index([referrerId])
+  @@index([referredId])
+}
+
+// ─── Daily Rewards / Login Bonus ────────────────────
+model DailyReward {
+  id        String   @id @default(cuid())
+  userId    String
+  day       Int      // 1-7 (which day of the streak cycle)
+  amount    Float
+  claimedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([claimedAt])
+}
+
+// ─── Daily Spin History ─────────────────────────────
+model DailySpin {
+  id      String   @id @default(cuid())
+  userId  String
+  prize   String   // "$0.25", "$0.50", etc.
+  amount  Float
+  spunAt  DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([spunAt])
+}
+
+// ─── Achievements / Badges ──────────────────────────
+model Achievement {
+  id          String  @id @default(cuid())
+  key         String  @unique // e.g. "first_offer", "streak_7"
+  name        String
+  description String
+  icon        String  // icon identifier
+  category    String  @default("general") // earning | activity | streaks | social | special
+  rarity      String  @default("common") // common | rare | epic | legendary
+  criteria    String  // JSON - e.g. {"type": "offers_completed", "value": 1}
+  rewardAmount Float  @default(0)
+  sortOrder   Int     @default(0)
+
+  userAchievements UserAchievement[]
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+// ─── Notifications ──────────────────────────────────
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // system | reward | cashout | referral | achievement | streak
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  metadata  String?  // JSON
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// ─── App Configuration ──────────────────────────────
+model AppConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
 }

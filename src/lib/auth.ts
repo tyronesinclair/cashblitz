@@ -25,6 +25,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
 
         if (!user || !user.password) return null;
+        if (user.isBanned) return null;
 
         const isValid = await bcrypt.compare(
           credentials.password as string,
@@ -44,27 +45,48 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
+      // On initial sign-in, set the user ID
       if (user) {
+        token.id = user.id as string;
+      }
+
+      // Always refresh balance, role, and streak from the database
+      // This ensures the session always has the latest values
+      const userId = token.id as string;
+      if (userId) {
         const dbUser = await prisma.user.findUnique({
-          where: { email: user.email! },
+          where: { id: userId },
+          select: { role: true, balance: true, streak: true },
         });
         if (dbUser) {
-          token.id = dbUser.id;
           token.role = dbUser.role;
           token.balance = dbUser.balance;
+          token.streak = dbUser.streak;
         }
       }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (session.user as any).role = token.role;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (session.user as any).balance = token.balance;
+        session.user.role = (token.role as string) || "user";
+        session.user.balance = (token.balance as number) || 0;
+        session.user.streak = (token.streak as number) || 0;
       }
       return session;
     },
   },
 });
+
+// Helper: check if current user is admin
+export async function isAdmin() {
+  const session = await auth();
+  return session?.user && session.user.role === "admin";
+}
+
+// Helper: get current authenticated user ID
+export async function getAuthUserId() {
+  const session = await auth();
+  return session?.user?.id || null;
+}

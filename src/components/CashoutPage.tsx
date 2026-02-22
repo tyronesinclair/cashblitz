@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { DollarSign, CreditCard, Check, Clock, Shield, TrendingUp } from "lucide-react";
+import { useState, useEffect } from "react";
+import { DollarSign, CreditCard, Check, Clock, Shield, TrendingUp, Loader2, AlertCircle, History } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
-import { userProfile } from "@/data/offers";
 
 const cashoutMethods = [
   { id: "paypal", name: "PayPal", icon: "💳", minAmount: 5, processingTime: "Instant", popular: true },
@@ -17,23 +16,125 @@ const cashoutMethods = [
 
 const amounts = [5, 10, 25, 50, 100];
 
+interface Payout {
+  id: string;
+  amount: number;
+  method: string;
+  status: string;
+  createdAt: string;
+}
+
 export default function CashoutPage() {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [balance, setBalance] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [payoutHistory, setPayoutHistory] = useState<Payout[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [weeklyEarnings, setWeeklyEarnings] = useState<number>(0);
 
-  const handleCashout = () => {
-    if (!selectedMethod || !selectedAmount) return;
-    setShowSuccess(true);
-    confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 }, colors: ["#00e676", "#ffd700", "#ff6bff"] });
+  // Fetch real balance
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const res = await fetch("/api/user/balance");
+        if (res.ok) {
+          const data = await res.json();
+          setBalance(data.balance);
+          setWeeklyEarnings(data.totalEarnings || 0);
+        }
+      } catch {
+        // Fallback to 0
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBalance();
+  }, []);
+
+  // Fetch payout history
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch("/api/cashout");
+        if (res.ok) {
+          const data = await res.json();
+          setPayoutHistory(data);
+        }
+      } catch {
+        // Silent fail
+      }
+    };
+    fetchHistory();
+  }, [showSuccess]);
+
+  const handleCashout = async () => {
+    if (!selectedMethod || !selectedAmount || submitting) return;
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/cashout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: selectedAmount, method: selectedMethod }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Cashout failed. Please try again.");
+        setSubmitting(false);
+        return;
+      }
+
+      // Success
+      setBalance((prev) => prev - selectedAmount);
+      setShowSuccess(true);
+      confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 }, colors: ["#00e676", "#ffd700", "#ff6bff"] });
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const method = cashoutMethods.find((m) => m.id === selectedMethod);
-  const canCashout = selectedMethod && selectedAmount && selectedAmount <= userProfile.balance;
+  const canCashout = selectedMethod && selectedAmount && selectedAmount <= balance && !submitting;
+
+  const statusColor = (status: string) => {
+    switch (status) {
+      case "completed": return "text-primary";
+      case "pending": return "text-accent-2";
+      case "processing": return "text-cyan-400";
+      case "rejected": return "text-danger";
+      default: return "text-muted";
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="px-4 py-4 pb-24 casino-bg flex items-center justify-center min-h-[50vh]">
+        <Loader2 size={32} className="text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 py-4 pb-24 casino-bg">
-      <h2 className="text-xl font-extrabold text-foreground mb-0.5">Cashout</h2>
+      <div className="flex items-center justify-between mb-0.5">
+        <h2 className="text-xl font-extrabold text-foreground">Cashout</h2>
+        <button
+          onClick={() => setShowHistory(!showHistory)}
+          className="flex items-center gap-1 text-xs font-medium text-primary press-scale"
+        >
+          <History size={14} />
+          {showHistory ? "Back" : "History"}
+        </button>
+      </div>
       <p className="text-xs text-muted mb-4">Withdraw your earnings</p>
 
       {/* Balance card */}
@@ -48,17 +149,74 @@ export default function CashoutPage() {
           <span className="text-xs font-medium text-muted">Available Balance</span>
         </div>
         <span className="text-3xl font-extrabold text-foreground">
-          CAD {userProfile.balance.toFixed(2)}
+          CAD {balance.toFixed(2)}
         </span>
-        <div className="flex items-center gap-1.5 mt-1.5">
-          <TrendingUp size={12} className="text-primary" />
-          <span className="text-[10px] text-primary font-medium">+CAD 3.50 this week</span>
-        </div>
+        {weeklyEarnings > 0 && (
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <TrendingUp size={12} className="text-primary" />
+            <span className="text-[10px] text-primary font-medium">CAD {weeklyEarnings.toFixed(2)} total earned</span>
+          </div>
+        )}
       </motion.div>
 
       <AnimatePresence mode="wait">
-        {!showSuccess ? (
+        {showHistory ? (
+          /* ── Payout History ── */
+          <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <h3 className="font-bold text-foreground text-sm mb-3">Withdrawal History</h3>
+            {payoutHistory.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-2xl mb-2">💸</p>
+                <p className="text-muted text-sm">No withdrawals yet</p>
+                <p className="text-xs text-muted mt-1">Complete offers to earn and withdraw!</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {payoutHistory.map((payout, i) => (
+                  <motion.div
+                    key={payout.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="bg-surface rounded-xl p-3 border border-border flex items-center justify-between"
+                  >
+                    <div>
+                      <p className="text-sm font-bold text-foreground">
+                        {cashoutMethods.find((m) => m.id === payout.method)?.icon}{" "}
+                        {cashoutMethods.find((m) => m.id === payout.method)?.name || payout.method}
+                      </p>
+                      <p className="text-[10px] text-muted">
+                        {new Date(payout.createdAt).toLocaleDateString("en-US", {
+                          month: "short", day: "numeric", year: "numeric",
+                          hour: "2-digit", minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-foreground">CAD {payout.amount.toFixed(2)}</p>
+                      <p className={`text-[10px] font-semibold capitalize ${statusColor(payout.status)}`}>
+                        {payout.status}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        ) : !showSuccess ? (
           <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            {/* Error */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-danger/10 border border-danger/20 rounded-xl p-3 mb-4 flex items-center gap-2"
+              >
+                <AlertCircle size={14} className="text-danger flex-shrink-0" />
+                <p className="text-xs text-danger">{error}</p>
+              </motion.div>
+            )}
+
             {/* Amount */}
             <h3 className="font-bold text-foreground text-sm mb-2">Select Amount</h3>
             <div className="grid grid-cols-3 gap-2 mb-5">
@@ -66,11 +224,11 @@ export default function CashoutPage() {
                 <button
                   key={amt}
                   onClick={() => setSelectedAmount(amt)}
-                  disabled={amt > userProfile.balance}
+                  disabled={amt > balance}
                   className={`py-2.5 rounded-xl text-sm font-bold transition-all press-scale ${
                     selectedAmount === amt
                       ? "bg-primary text-background glow-green"
-                      : amt > userProfile.balance
+                      : amt > balance
                       ? "bg-surface-light text-muted/30 border border-border cursor-not-allowed"
                       : "bg-surface-light text-foreground border border-border active:bg-border"
                   }`}
@@ -146,8 +304,16 @@ export default function CashoutPage() {
                   : "bg-surface-light text-muted border border-border cursor-not-allowed"
               }`}
             >
-              <DollarSign size={16} />
-              {canCashout ? `Withdraw CAD ${selectedAmount?.toFixed(2)}` : "Select amount & method"}
+              {submitting ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <DollarSign size={16} />
+              )}
+              {submitting
+                ? "Processing..."
+                : canCashout
+                ? `Withdraw CAD ${selectedAmount?.toFixed(2)}`
+                : "Select amount & method"}
             </motion.button>
 
             <div className="flex items-center justify-center gap-1.5 mt-3">
@@ -166,7 +332,8 @@ export default function CashoutPage() {
               <Check size={32} className="text-primary" />
             </motion.div>
             <h3 className="text-xl font-extrabold text-foreground mb-1">Cashout Successful! 🎉</h3>
-            <p className="text-sm text-muted mb-5">CAD {selectedAmount?.toFixed(2)} is on its way to your {method?.name}</p>
+            <p className="text-sm text-muted mb-1">CAD {selectedAmount?.toFixed(2)} is on its way to your {method?.name}</p>
+            <p className="text-xs text-muted mb-5">You&apos;ll be notified when it&apos;s processed.</p>
             <button
               onClick={() => { setShowSuccess(false); setSelectedAmount(null); setSelectedMethod(null); }}
               className="px-8 py-2.5 bg-surface-light border border-border rounded-xl text-sm font-semibold text-foreground active:bg-border press-scale"

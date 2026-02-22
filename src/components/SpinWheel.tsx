@@ -1,44 +1,141 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 
-const prizes = ["$0.25", "$0.50", "$1.00", "$0.10", "$2.00", "$0.05", "$5.00", "$0.15"];
+const PRIZE_LABELS = ["$0.05", "$0.10", "$0.15", "$0.25", "$0.50", "$1.00", "$2.00", "$5.00"];
 const colors = [
   "#00e676", "#1c2333", "#ffd600", "#1c2333",
   "#ff6bff", "#1c2333", "#00bcd4", "#1c2333",
 ];
 
-export default function SpinWheel({ onClose }: { onClose: () => void }) {
+interface SpinWheelProps {
+  onClose: () => void;
+  onBalanceUpdate?: () => void;
+}
+
+export default function SpinWheel({ onClose, onBalanceUpdate }: SpinWheelProps) {
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [won, setWon] = useState<string | null>(null);
+  const [wonAmount, setWonAmount] = useState<number>(0);
+  const [canSpin, setCanSpin] = useState(true);
+  const [cooldownMs, setCooldownMs] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const spin = useCallback(() => {
-    if (spinning) return;
+  // Check spin status on mount
+  useEffect(() => {
+    const checkSpinStatus = async () => {
+      try {
+        const res = await fetch("/api/spin");
+        if (res.ok) {
+          const data = await res.json();
+          setCanSpin(data.canSpin);
+          if (!data.canSpin) {
+            setCooldownMs(data.cooldownMs || 0);
+          }
+        }
+      } catch {
+        // Silently fail — user can try spinning
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkSpinStatus();
+  }, []);
+
+  // Countdown timer for cooldown
+  useEffect(() => {
+    if (cooldownMs <= 0) return;
+    const interval = setInterval(() => {
+      setCooldownMs((prev) => {
+        const next = prev - 1000;
+        if (next <= 0) {
+          setCanSpin(true);
+          return 0;
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldownMs]);
+
+  const formatCountdown = (ms: number) => {
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  const spin = useCallback(async () => {
+    if (spinning || !canSpin) return;
     setSpinning(true);
     setWon(null);
+    setError(null);
 
-    const prizeIndex = Math.floor(Math.random() * prizes.length);
-    const segmentAngle = 360 / prizes.length;
-    // Spin 5-8 full rotations + land on the prize
-    const spins = (5 + Math.random() * 3) * 360;
-    const targetAngle = spins + (360 - prizeIndex * segmentAngle - segmentAngle / 2);
+    try {
+      const res = await fetch("/api/spin", { method: "POST" });
+      const data = await res.json();
 
-    setRotation(targetAngle);
+      if (res.status === 429) {
+        // Already spun today
+        setCanSpin(false);
+        setCooldownMs(data.cooldownMs || 0);
+        setSpinning(false);
+        setError("You already spun today! Come back tomorrow.");
+        return;
+      }
 
-    setTimeout(() => {
+      if (!res.ok) {
+        setSpinning(false);
+        setError(data.error || "Something went wrong");
+        return;
+      }
+
+      // Animate to the server-determined prize
+      const prizeIndex = data.prizeIndex ?? PRIZE_LABELS.indexOf(data.prize);
+      const segmentAngle = 360 / PRIZE_LABELS.length;
+      const spins = (5 + Math.random() * 3) * 360;
+      const targetAngle = spins + (360 - prizeIndex * segmentAngle - segmentAngle / 2);
+
+      setRotation(targetAngle);
+
+      setTimeout(() => {
+        setSpinning(false);
+        setWon(data.prize);
+        setWonAmount(data.amount);
+        setCanSpin(false);
+
+        // Calculate cooldown until next UTC midnight
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+        tomorrow.setUTCHours(0, 0, 0, 0);
+        setCooldownMs(tomorrow.getTime() - now.getTime());
+
+        confetti({
+          particleCount: 80,
+          spread: 60,
+          origin: { y: 0.5 },
+          colors: ["#00e676", "#ffd700", "#ff6bff"],
+        });
+      }, 4000);
+    } catch {
       setSpinning(false);
-      setWon(prizes[prizeIndex]);
-      confetti({
-        particleCount: 80,
-        spread: 60,
-        origin: { y: 0.5 },
-        colors: ["#00e676", "#ffd700", "#ff6bff"],
-      });
-    }, 4000);
-  }, [spinning]);
+      setError("Network error. Please try again.");
+    }
+  }, [spinning, canSpin]);
+
+  const handleClose = () => {
+    if (won && onBalanceUpdate) {
+      onBalanceUpdate();
+    }
+    onClose();
+  };
 
   return (
     <motion.div
@@ -46,7 +143,7 @@ export default function SpinWheel({ onClose }: { onClose: () => void }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <motion.div
         initial={{ scale: 0.5, opacity: 0 }}
@@ -59,7 +156,9 @@ export default function SpinWheel({ onClose }: { onClose: () => void }) {
         <h3 className="text-xl font-extrabold text-foreground mb-1">
           🎰 Daily Spin
         </h3>
-        <p className="text-xs text-muted mb-4">Spin to win bonus cash!</p>
+        <p className="text-xs text-muted mb-4">
+          {canSpin ? "Spin to win bonus cash!" : "Come back tomorrow for another spin!"}
+        </p>
 
         {/* Wheel */}
         <div className="relative w-56 h-56 mx-auto mb-5">
@@ -76,15 +175,15 @@ export default function SpinWheel({ onClose }: { onClose: () => void }) {
             transition={{ duration: 4, ease: [0.2, 0.8, 0.3, 1] }}
           >
             <svg viewBox="0 0 200 200" className="w-full h-full">
-              {prizes.map((prize, i) => {
-                const angle = (360 / prizes.length) * i;
+              {PRIZE_LABELS.map((prize, i) => {
+                const angle = (360 / PRIZE_LABELS.length) * i;
                 const rad = (angle * Math.PI) / 180;
-                const nextRad = ((angle + 360 / prizes.length) * Math.PI) / 180;
+                const nextRad = ((angle + 360 / PRIZE_LABELS.length) * Math.PI) / 180;
                 const x1 = 100 + 100 * Math.cos(rad);
                 const y1 = 100 + 100 * Math.sin(rad);
                 const x2 = 100 + 100 * Math.cos(nextRad);
                 const y2 = 100 + 100 * Math.sin(nextRad);
-                const textAngle = angle + 360 / prizes.length / 2;
+                const textAngle = angle + 360 / PRIZE_LABELS.length / 2;
                 const textRad = (textAngle * Math.PI) / 180;
                 const tx = 100 + 62 * Math.cos(textRad);
                 const ty = 100 + 62 * Math.sin(textRad);
@@ -131,23 +230,51 @@ export default function SpinWheel({ onClose }: { onClose: () => void }) {
             >
               <p className="text-xs text-muted">You won</p>
               <p className="text-3xl font-extrabold gradient-text-gold">{won}</p>
+              <p className="text-[10px] text-primary mt-1">
+                +${wonAmount.toFixed(2)} added to your balance!
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Spin button */}
+        {/* Error message */}
+        {error && !won && (
+          <div className="mb-4 text-xs text-danger">{error}</div>
+        )}
+
+        {/* Cooldown timer */}
+        {!canSpin && cooldownMs > 0 && !won && !spinning && (
+          <div className="mb-4">
+            <p className="text-[10px] text-muted">Next spin available in</p>
+            <p className="text-lg font-bold text-accent-2 font-mono">
+              {formatCountdown(cooldownMs)}
+            </p>
+          </div>
+        )}
+
+        {/* Spin/Close button */}
         <button
-          onClick={spin}
-          disabled={spinning}
+          onClick={won ? handleClose : spin}
+          disabled={spinning || loading || (!canSpin && !won)}
           className={`w-full py-3 rounded-xl font-bold text-sm transition-all press-scale ${
-            spinning
+            spinning || loading
               ? "bg-surface-light text-muted cursor-not-allowed"
               : won
               ? "bg-primary text-background pulse-glow"
-              : "bg-gradient-to-r from-primary to-teal-400 text-background pulse-glow"
+              : canSpin
+              ? "bg-gradient-to-r from-primary to-teal-400 text-background pulse-glow"
+              : "bg-surface-light text-muted cursor-not-allowed"
           }`}
         >
-          {spinning ? "Spinning..." : won ? "Collect & Close" : "🎰 SPIN NOW!"}
+          {loading
+            ? "Loading..."
+            : spinning
+            ? "Spinning..."
+            : won
+            ? "Collect & Close"
+            : canSpin
+            ? "🎰 SPIN NOW!"
+            : "Already Spun Today"}
         </button>
       </motion.div>
     </motion.div>
