@@ -87,11 +87,31 @@ const faqs = [
   },
 ];
 
-const footerLinks = {
-  Platform: ["How It Works", "Available Offers", "Payout Methods", "Mobile App"],
-  Company: ["About Us", "Careers", "Press", "Blog"],
-  Support: ["Help Center", "Contact Us", "Status", "Bug Bounty"],
-  Legal: ["Privacy Policy", "Terms of Service", "Cookie Policy", "GDPR"],
+const footerLinks: Record<string, { label: string; href: string }[]> = {
+  Platform: [
+    { label: "How It Works", href: "/about" },
+    { label: "Available Offers", href: "/dashboard" },
+    { label: "Payout Methods", href: "/dashboard" },
+    { label: "Sign Up", href: "/signup" },
+  ],
+  Company: [
+    { label: "About Us", href: "/about" },
+    { label: "Careers", href: "/about" },
+    { label: "Press", href: "/about" },
+    { label: "Blog", href: "/about" },
+  ],
+  Support: [
+    { label: "Help Center", href: "/about" },
+    { label: "Contact Us", href: "/about" },
+    { label: "Login", href: "/login" },
+    { label: "Sign Up", href: "/signup" },
+  ],
+  Legal: [
+    { label: "Privacy Policy", href: "/about" },
+    { label: "Terms of Service", href: "/about" },
+    { label: "Cookie Policy", href: "/about" },
+    { label: "GDPR", href: "/about" },
+  ],
 };
 
 /* ═══════════════════ COMPONENT ═══════════════════ */
@@ -757,8 +777,8 @@ export default function LandingPage() {
                 <h4 className="text-sm font-bold text-foreground mb-3">{title}</h4>
                 <ul className="space-y-2">
                   {links.map((link) => (
-                    <li key={link}>
-                      <span className="text-xs text-muted hover:text-foreground cursor-pointer transition-colors">{link}</span>
+                    <li key={link.label}>
+                      <a href={link.href} className="text-xs text-muted hover:text-foreground cursor-pointer transition-colors">{link.label}</a>
                     </li>
                   ))}
                 </ul>
@@ -770,9 +790,9 @@ export default function LandingPage() {
           <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-muted">&copy; 2026 CashBlitz. All rights reserved.</p>
             <div className="flex items-center gap-4 text-xs text-muted">
-              <span className="hover:text-foreground cursor-pointer">Privacy Policy</span>
-              <span className="hover:text-foreground cursor-pointer">Terms of Service</span>
-              <span className="hover:text-foreground cursor-pointer">Cookie Policy</span>
+              <a href="/about" className="hover:text-foreground cursor-pointer">Privacy Policy</a>
+              <a href="/about" className="hover:text-foreground cursor-pointer">Terms of Service</a>
+              <a href="/about" className="hover:text-foreground cursor-pointer">Cookie Policy</a>
             </div>
           </div>
         </div>

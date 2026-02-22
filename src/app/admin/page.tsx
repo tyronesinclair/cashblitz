@@ -10,7 +10,7 @@ import {
   X, Shield, Star, Clock, Eye, EyeOff, AlertCircle, Check,
   TrendingUp, Activity, Flame, Crown, Gift, Settings,
   CreditCard, ChevronRight, ChevronLeft, Home, RefreshCw,
-  UserCheck, UserX, Download, Filter
+  UserCheck, UserX, Download, Filter, BookOpen
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -73,7 +73,7 @@ interface Stats {
   topEarners: { id: string; name: string | null; email: string; totalEarnings: number }[];
 }
 
-type AdminTab = "dashboard" | "offers" | "users" | "payouts" | "settings";
+type AdminTab = "dashboard" | "offers" | "users" | "payouts" | "settings" | "docs";
 type SubView = "list" | "edit" | "detail";
 
 const emptyOffer: Partial<Offer> = {
@@ -100,6 +100,7 @@ const adminTabs = [
   { id: "users" as AdminTab, label: "Users", icon: Users },
   { id: "payouts" as AdminTab, label: "Payouts", icon: CreditCard },
   { id: "settings" as AdminTab, label: "Settings", icon: Settings },
+  { id: "docs" as AdminTab, label: "Docs", icon: BookOpen },
 ];
 
 /* ═══════════════ COMPONENT ═══════════════ */
@@ -935,6 +936,185 @@ export default function AdminPage() {
                       </button>
                     </div>
                   </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+          {/* ═══════════════════════════════════════ */}
+          {/* ══════ DOCS TAB ══════ */}
+          {/* ═══════════════════════════════════════ */}
+          {activeTab === "docs" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto space-y-4">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-primary/10 to-primary-dark/5 rounded-2xl p-5 border border-primary/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <BookOpen size={20} className="text-primary" />
+                  <h2 className="text-lg font-extrabold text-foreground">CashBlitz Admin Documentation</h2>
+                </div>
+                <p className="text-sm text-muted">Complete guide to all platform features, APIs, and admin controls.</p>
+              </div>
+
+              {/* Platform Overview */}
+              <div className="bg-surface rounded-2xl p-5 border border-border">
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Zap size={16} className="text-primary" />Platform Overview</h3>
+                <div className="text-sm text-muted space-y-2 leading-relaxed">
+                  <p><strong className="text-foreground">CashBlitz</strong> is a cash rewards platform where users earn money by completing offers (games, surveys, tasks), spinning the daily wheel, claiming daily login bonuses, and referring friends.</p>
+                  <p><strong className="text-foreground">Tech Stack:</strong> Next.js 16, TypeScript, Prisma 7, PostgreSQL, NextAuth.js v5, Tailwind CSS v4, Framer Motion.</p>
+                  <p><strong className="text-foreground">Deployment:</strong> Railway with Docker, auto-deploys from GitHub main branch.</p>
+                </div>
+              </div>
+
+              {/* User System */}
+              <div className="bg-surface rounded-2xl p-5 border border-border">
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Users size={16} className="text-primary" />User System</h3>
+                <div className="text-sm text-muted space-y-2 leading-relaxed">
+                  <p><strong className="text-foreground">Authentication:</strong> Email/password via NextAuth.js with JWT sessions. Passwords are bcrypt-hashed.</p>
+                  <p><strong className="text-foreground">Roles:</strong> &quot;user&quot; (default) and &quot;admin&quot;. Admins can access /admin panel.</p>
+                  <p><strong className="text-foreground">Balance:</strong> Real-time balance tracked in the database. Refreshed on every JWT token rotation.</p>
+                  <p><strong className="text-foreground">XP &amp; Levels:</strong> Users earn XP from spins (10 XP), daily bonuses (25 XP), and actions. Levels: Rookie (0), Bronze (100), Silver (500), Gold (1500), Platinum (5000), Diamond (10000).</p>
+                  <p><strong className="text-foreground">Streaks:</strong> Consecutive daily login tracking. Resets if a day is missed.</p>
+                  <p><strong className="text-foreground">Banning:</strong> Set isBanned=true on a user to prevent login.</p>
+                </div>
+              </div>
+
+              {/* Offers System */}
+              <div className="bg-surface rounded-2xl p-5 border border-border">
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Gamepad2 size={16} className="text-accent-2" />Offers System</h3>
+                <div className="text-sm text-muted space-y-2 leading-relaxed">
+                  <p><strong className="text-foreground">Creating Offers:</strong> Use the Offers tab to create/edit. Each offer has a name, image URL, description, category (game/survey/task), platform, total reward, and multi-step rewards.</p>
+                  <p><strong className="text-foreground">Rewards:</strong> Each offer has multiple reward steps with individual amounts, time limits, and bonus flags. Tasks are completed in order.</p>
+                  <p><strong className="text-foreground">Flags:</strong> isPremium (featured), isHot (trending badge), isNew (new badge), isActive (visible to users), newUsersOnly.</p>
+                  <p><strong className="text-foreground">External URL:</strong> If set, clicking &quot;Start&quot; opens the URL in a new tab (for real offer wall integration).</p>
+                  <p><strong className="text-foreground">User Tracking:</strong> When a user starts an offer, a UserOffer record is created with a unique trackingId for postback verification.</p>
+                </div>
+              </div>
+
+              {/* Financial System */}
+              <div className="bg-surface rounded-2xl p-5 border border-border">
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><DollarSign size={16} className="text-primary" />Financial System</h3>
+                <div className="text-sm text-muted space-y-2 leading-relaxed">
+                  <p><strong className="text-foreground">Cashouts:</strong> Users can withdraw via PayPal ($5 min), Visa ($10), Amazon ($5), Bitcoin ($10), Apple ($10), or Steam ($5). All zero-fee.</p>
+                  <p><strong className="text-foreground">Payout Processing:</strong> Payouts start as &quot;pending&quot;. Admin can approve (→completed), reject (→rejected, auto-refunds balance), or set processing status via Payouts tab.</p>
+                  <p><strong className="text-foreground">Transactions:</strong> Every balance change creates a Transaction record with type, amount, balanceBefore/After, and metadata for full audit trail.</p>
+                  <p><strong className="text-foreground">Transaction Types:</strong> offer_reward, spin, daily_bonus, referral_bonus, withdraw, refund, admin_adjustment.</p>
+                  <p><strong className="text-foreground">Atomicity:</strong> All financial operations use Prisma.$transaction for atomicity — no partial updates.</p>
+                </div>
+              </div>
+
+              {/* Daily Spin */}
+              <div className="bg-surface rounded-2xl p-5 border border-border">
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Gift size={16} className="text-accent-2" />Daily Spin Wheel</h3>
+                <div className="text-sm text-muted space-y-2 leading-relaxed">
+                  <p><strong className="text-foreground">Cooldown:</strong> 1 free spin per UTC calendar day. Cooldown resets at midnight UTC.</p>
+                  <p><strong className="text-foreground">Prize Distribution (weighted):</strong></p>
+                  <div className="bg-surface-light rounded-xl p-3 border border-border mt-1">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                      <span>$0.05 — 25% chance</span><span>$0.50 — 8% chance</span>
+                      <span>$0.10 — 25% chance</span><span>$1.00 — 4% chance</span>
+                      <span>$0.15 — 20% chance</span><span>$2.00 — 2% chance</span>
+                      <span>$0.25 — 15% chance</span><span>$5.00 — 1% chance</span>
+                    </div>
+                  </div>
+                  <p><strong className="text-foreground">Server-side:</strong> Prize is determined server-side (not client). The frontend animates to the server&apos;s result.</p>
+                </div>
+              </div>
+
+              {/* Daily Login Bonus */}
+              <div className="bg-surface rounded-2xl p-5 border border-border">
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Flame size={16} className="text-orange-500" />Daily Login Bonus</h3>
+                <div className="text-sm text-muted space-y-2 leading-relaxed">
+                  <p><strong className="text-foreground">7-Day Escalating Calendar:</strong></p>
+                  <div className="bg-surface-light rounded-xl p-3 border border-border mt-1">
+                    <div className="grid grid-cols-7 gap-2 text-xs text-center">
+                      <div><strong>Day 1</strong><br/>$0.05</div>
+                      <div><strong>Day 2</strong><br/>$0.10</div>
+                      <div><strong>Day 3</strong><br/>$0.15</div>
+                      <div><strong>Day 4</strong><br/>$0.25</div>
+                      <div><strong>Day 5</strong><br/>$0.50</div>
+                      <div><strong>Day 6</strong><br/>$0.75</div>
+                      <div><strong>Day 7</strong><br/>$2.00</div>
+                    </div>
+                  </div>
+                  <p><strong className="text-foreground">Streak Logic:</strong> If a user misses a day, streak resets to Day 1. After Day 7, it cycles back to Day 1.</p>
+                  <p><strong className="text-foreground">Awards:</strong> 25 XP per claim + the cash amount.</p>
+                </div>
+              </div>
+
+              {/* Referral System */}
+              <div className="bg-surface rounded-2xl p-5 border border-border">
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Users size={16} className="text-primary" />Referral System</h3>
+                <div className="text-sm text-muted space-y-2 leading-relaxed">
+                  <p><strong className="text-foreground">How it works:</strong> Each user gets a unique referral code (auto-generated). Share link: /signup?ref=CODE.</p>
+                  <p><strong className="text-foreground">Bonus:</strong> Configurable referral bonus ($1.00 default) when referred user completes their first offer.</p>
+                  <p><strong className="text-foreground">Tracking:</strong> Referral model tracks referrer, referee, status (pending/completed), and bonus amount.</p>
+                </div>
+              </div>
+
+              {/* API Reference */}
+              <div className="bg-surface rounded-2xl p-5 border border-border">
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Shield size={16} className="text-primary" />API Reference</h3>
+                <div className="text-sm text-muted space-y-2">
+                  <p className="font-semibold text-foreground">Public APIs (require auth):</p>
+                  <div className="bg-surface-light rounded-xl p-3 border border-border font-mono text-xs space-y-1">
+                    <p>GET  /api/offers — List all active offers</p>
+                    <p>POST /api/offers/[id]/start — Start an offer (creates UserOffer)</p>
+                    <p>GET  /api/user/balance — User balance, streak, level, XP</p>
+                    <p>GET  /api/user/offers?status=active|completed — User&apos;s offers</p>
+                    <p>GET  /api/user/notifications — Notifications + unread count</p>
+                    <p>POST /api/user/notifications — Mark as read</p>
+                    <p>GET  /api/user/transactions?type=spin|withdraw — Transaction history</p>
+                    <p>POST /api/spin — Spin the wheel (1/day)</p>
+                    <p>GET  /api/spin — Check spin cooldown</p>
+                    <p>POST /api/daily-reward — Claim daily bonus</p>
+                    <p>GET  /api/daily-reward — Check daily reward status</p>
+                    <p>POST /api/cashout — Request withdrawal</p>
+                    <p>GET  /api/cashout — Payout history</p>
+                    <p>GET  /api/referral — Get referral code + stats</p>
+                  </div>
+                  <p className="font-semibold text-foreground mt-3">Admin APIs (require admin role):</p>
+                  <div className="bg-surface-light rounded-xl p-3 border border-border font-mono text-xs space-y-1">
+                    <p>GET  /api/admin/stats — Dashboard statistics</p>
+                    <p>GET  /api/admin/offers — List all offers</p>
+                    <p>POST /api/admin/offers — Create offer</p>
+                    <p>PUT  /api/admin/offers/[id] — Update offer</p>
+                    <p>DELETE /api/admin/offers/[id] — Delete offer</p>
+                    <p>GET  /api/admin/users — List all users</p>
+                    <p>PUT  /api/admin/users/[id] — Update user (role, balance, ban)</p>
+                    <p>GET  /api/admin/payouts — List payouts (filterable)</p>
+                    <p>PUT  /api/admin/payouts — Update payout status</p>
+                    <p>POST /api/admin/seed — Re-seed demo data</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Database Models */}
+              <div className="bg-surface rounded-2xl p-5 border border-border">
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><BarChart3 size={16} className="text-accent-2" />Database Models</h3>
+                <div className="text-sm text-muted space-y-2 leading-relaxed">
+                  <p><strong className="text-foreground">User</strong> — Auth, balance, XP, streak, role, referral code, ban status</p>
+                  <p><strong className="text-foreground">Offer</strong> — Name, image, category, rewards, flags, external URL</p>
+                  <p><strong className="text-foreground">OfferReward</strong> — Individual reward steps per offer</p>
+                  <p><strong className="text-foreground">UserOffer</strong> — Tracks which users started/completed which offers</p>
+                  <p><strong className="text-foreground">Payout</strong> — Withdrawal requests with status tracking</p>
+                  <p><strong className="text-foreground">Transaction</strong> — Full audit log of all balance changes</p>
+                  <p><strong className="text-foreground">DailyReward</strong> — Daily login bonus claim records</p>
+                  <p><strong className="text-foreground">DailySpin</strong> — Spin wheel prize records</p>
+                  <p><strong className="text-foreground">Referral</strong> — Referrer/referee relationships and bonus tracking</p>
+                  <p><strong className="text-foreground">Notification</strong> — In-app notifications (reward, system, cashout, offer)</p>
+                  <p><strong className="text-foreground">Achievement / UserAchievement</strong> — Achievement definitions and unlocks</p>
+                  <p><strong className="text-foreground">AppConfig</strong> — Key/value config store for runtime settings</p>
+                </div>
+              </div>
+
+              {/* Demo Accounts */}
+              <div className="bg-surface rounded-2xl p-5 border border-border">
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Crown size={16} className="text-accent-2" />Demo Accounts</h3>
+                <div className="text-sm text-muted space-y-2">
+                  <div className="bg-surface-light rounded-xl p-3 border border-border font-mono text-xs space-y-1">
+                    <p><strong>Admin:</strong> admin@cashblitz.com / admin123</p>
+                    <p><strong>Demo User:</strong> demo@cashblitz.com / demo123</p>
+                  </div>
+                  <p>Use the &quot;Re-seed Database&quot; button in Settings to reset demo data if needed.</p>
                 </div>
               </div>
             </motion.div>
