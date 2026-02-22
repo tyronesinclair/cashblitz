@@ -26,4 +26,4 @@ ENV HOSTNAME="0.0.0.0"
 ENV NODE_ENV=production
 
 # Push DB schema and start the app
-CMD npx prisma db push --skip-generate && npm start
+CMD npx prisma db push && npm start
