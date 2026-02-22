@@ -1,26 +1,173 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: #0d1117;
+  --color-surface: #161b22;
+  --color-surface-light: #1c2333;
+  --color-border: #2d3548;
+  --color-foreground: #e6edf3;
+  --color-muted: #8b949e;
+  --color-primary: #00e676;
+  --color-primary-dark: #00c853;
+  --color-accent: #ff6bff;
+  --color-accent-2: #ffd600;
+  --color-danger: #ff4757;
+  --color-gold: #ffd700;
+  --color-coin: #f5a623;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2d3548 transparent;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  overflow-x: hidden;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-background);
+  color: var(--color-foreground);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* Mobile safe areas */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Hide scrollbar but keep scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Casino glow effects */
+.glow-green {
+  box-shadow: 0 0 15px rgba(0, 230, 118, 0.25), 0 0 40px rgba(0, 230, 118, 0.08);
+}
+.glow-gold {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.25), 0 0 40px rgba(255, 215, 0, 0.08);
+}
+.glow-accent {
+  box-shadow: 0 0 15px rgba(255, 107, 255, 0.25), 0 0 40px rgba(255, 107, 255, 0.08);
+}
+
+/* Shimmer skeleton */
+.shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Pulsing glow on CTA buttons */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 230, 118, 0.25); }
+  50% { box-shadow: 0 0 20px rgba(0, 230, 118, 0.5), 0 4px 15px rgba(0,230,118,0.15); }
+}
+.pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+/* Float animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+.float-anim { animation: float 3s ease-in-out infinite; }
+
+/* Coin spin */
+@keyframes coin-spin {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
+.coin-spin { animation: coin-spin 1s ease-in-out; }
+
+/* Slot flash */
+@keyframes slot-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.slot-flash { animation: slot-flash 0.4s ease-in-out 3; }
+
+/* Wiggle for fun attention */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+.wiggle { animation: wiggle 0.6s ease-in-out; }
+
+/* Bounce in for elements */
+@keyframes bounce-in {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.bounce-in { animation: bounce-in 0.6s ease-out; }
+
+/* Sparkle animation */
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #00e676, #00bcd4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gradient-text-gold {
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gradient-text-fire {
+  background: linear-gradient(135deg, #ff6b35, #ff4757);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Card hover - desktop only */
+@media (hover: hover) {
+  .card-hover { transition: all 0.3s ease; }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 230, 118, 0.12);
+  }
+}
+
+/* Casino background */
+.casino-bg {
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(0, 230, 118, 0.025) 0%, transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(255, 107, 255, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(255, 215, 0, 0.015) 0%, transparent 50%);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2d3548; border-radius: 2px; }
+
+/* Progress bar animation */
+@keyframes progress-fill { from { width: 0%; } }
+.progress-fill { animation: progress-fill 1s ease-out; }
+
+/* Active press state for mobile */
+.press-scale { transition: transform 0.1s ease; }
+.press-scale:active { transform: scale(0.97); }

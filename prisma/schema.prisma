@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth ───────────────────────────────────────────
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("user") // "user" | "admin"
+  balance       Float     @default(0)
+  totalEarnings Float     @default(0)
+  level         Int       @default(0)
+  streak        Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  userOffers    UserOffer[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Offers ─────────────────────────────────────────
+model Offer {
+  id            String   @id @default(cuid())
+  name          String
+  image         String
+  rating        Float    @default(4.5)
+  platform      String   @default("ios") // ios | android | desktop
+  totalReward   Float
+  category      String   @default("game") // game | survey | task
+  isPremium     Boolean  @default(false)
+  isHot         Boolean  @default(false)
+  isNew         Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  description   String
+  steps         String   // JSON array stored as string
+  newUsersOnly  Boolean  @default(true)
+  rewardMultiplier Int   @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  rewards       Reward[]
+  userOffers    UserOffer[]
+}
+
+model Reward {
+  id          String  @id @default(cuid())
+  offerId     String
+  task        String
+  amount      Float
+  timeLimit   String? // e.g. "3D", "7D"
+  isBonus     Boolean @default(false)
+  isLimited   Boolean @default(false)
+  sortOrder   Int     @default(0)
+
+  offer       Offer   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+}
+
+// ─── User Progress ──────────────────────────────────
+model UserOffer {
+  id          String   @id @default(cuid())
+  userId      String
+  offerId     String
+  status      String   @default("active") // active | completed | abandoned
+  earned      Float    @default(0)
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offer       Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, offerId])
+}
