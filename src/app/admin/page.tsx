@@ -353,7 +353,7 @@ export default function AdminPage() {
             )}
             <div>
               <h2 className="text-lg font-extrabold text-foreground capitalize">
-                {activeTab === "dashboard" ? "Dashboard" : activeTab === "offers" ? (subView === "edit" ? (isNewOffer ? "New Offer" : "Edit Offer") : "Manage Offers") : activeTab === "users" ? (subView === "edit" ? "Edit User" : "Manage Users") : activeTab === "payouts" ? "Payouts" : "Settings"}
+                {activeTab === "dashboard" ? "Dashboard" : activeTab === "offers" ? (subView === "edit" ? (isNewOffer ? "New Offer" : "Edit Offer") : "Manage Offers") : activeTab === "users" ? (subView === "edit" ? "Edit User" : "Manage Users") : activeTab === "payouts" ? "Payouts" : activeTab === "docs" ? "Documentation" : "Settings"}
               </h2>
               <p className="text-xs text-muted">{session?.user?.email}</p>
             </div>
@@ -389,8 +389,8 @@ export default function AdminPage() {
                 {[
                   { label: "Total Users", value: stats.userCount, icon: Users, color: "text-cyan-400", bg: "bg-cyan-400/10" },
                   { label: "Active Offers", value: `${stats.activeOfferCount}/${stats.offerCount}`, icon: Gamepad2, color: "text-primary", bg: "bg-primary/10" },
-                  { label: "Total Paid Out", value: `$${stats.totalEarnings.toFixed(0)}`, icon: DollarSign, color: "text-accent-2", bg: "bg-accent-2/10" },
-                  { label: "Pending Balance", value: `$${stats.totalBalance.toFixed(0)}`, icon: CreditCard, color: "text-accent", bg: "bg-accent/10" },
+                  { label: "Total Paid Out", value: `C$${stats.totalEarnings.toFixed(0)}`, icon: DollarSign, color: "text-accent-2", bg: "bg-accent-2/10" },
+                  { label: "Pending Balance", value: `C$${stats.totalBalance.toFixed(0)}`, icon: CreditCard, color: "text-accent", bg: "bg-accent/10" },
                 ].map((stat, i) => (
                   <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                     className="bg-surface rounded-2xl p-4 border border-border">
@@ -819,12 +819,12 @@ export default function AdminPage() {
               <div className="grid sm:grid-cols-3 gap-4 mb-6">
                 <div className="bg-surface rounded-2xl p-4 border border-border">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2"><DollarSign size={18} className="text-primary" /></div>
-                  <p className="text-2xl font-extrabold text-foreground">${stats?.totalEarnings.toFixed(2) || "0.00"}</p>
+                  <p className="text-2xl font-extrabold text-foreground">C${stats?.totalEarnings.toFixed(2) || "0.00"}</p>
                   <p className="text-[10px] text-muted mt-0.5">Total Paid Out</p>
                 </div>
                 <div className="bg-surface rounded-2xl p-4 border border-border">
                   <div className="w-9 h-9 rounded-xl bg-accent-2/10 flex items-center justify-center mb-2"><CreditCard size={18} className="text-accent-2" /></div>
-                  <p className="text-2xl font-extrabold text-foreground">${stats?.totalBalance.toFixed(2) || "0.00"}</p>
+                  <p className="text-2xl font-extrabold text-foreground">C${stats?.totalBalance.toFixed(2) || "0.00"}</p>
                   <p className="text-[10px] text-muted mt-0.5">Pending Balances</p>
                 </div>
                 <div className="bg-surface rounded-2xl p-4 border border-border">
@@ -838,9 +838,10 @@ export default function AdminPage() {
                 <h3 className="font-bold text-foreground text-sm mb-4 flex items-center gap-2"><CreditCard size={16} className="text-primary" />Payout Methods</h3>
                 <div className="space-y-3">
                   {[
+                    { name: "Interac e-Transfer", icon: "🏦", status: "active", minPayout: 5, fee: 0 },
                     { name: "PayPal", icon: "💳", status: "active", minPayout: 5, fee: 0 },
                     { name: "Visa Gift Card", icon: "💎", status: "active", minPayout: 10, fee: 0 },
-                    { name: "Amazon Gift Card", icon: "🛒", status: "active", minPayout: 5, fee: 0 },
+                    { name: "Amazon.ca Gift Card", icon: "🛒", status: "active", minPayout: 5, fee: 0 },
                     { name: "Bitcoin", icon: "₿", status: "active", minPayout: 10, fee: 0 },
                     { name: "Apple Gift Card", icon: "🍎", status: "active", minPayout: 10, fee: 0 },
                     { name: "Steam Gift Card", icon: "🎮", status: "active", minPayout: 5, fee: 0 },
@@ -849,7 +850,7 @@ export default function AdminPage() {
                       <span className="text-xl">{method.icon}</span>
                       <div className="flex-1">
                         <p className="text-sm font-bold text-foreground">{method.name}</p>
-                        <p className="text-[10px] text-muted">Min: ${method.minPayout} · Fee: {method.fee === 0 ? "Free" : `$${method.fee}`}</p>
+                        <p className="text-[10px] text-muted">Min: C${method.minPayout} · Fee: {method.fee === 0 ? "Free" : `C$${method.fee}`}</p>
                       </div>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${method.status === "active" ? "bg-primary/15 text-primary" : "bg-danger/15 text-danger"}`}>{method.status}</span>
                     </div>
@@ -877,9 +878,6 @@ export default function AdminPage() {
                       <label className="block text-xs font-medium text-muted mb-1.5">Currency</label>
                       <select defaultValue="CAD" className="w-full bg-background border border-border rounded-xl py-2.5 px-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors">
                         <option value="CAD">CAD - Canadian Dollar</option>
-                        <option value="USD">USD - US Dollar</option>
-                        <option value="EUR">EUR - Euro</option>
-                        <option value="GBP">GBP - British Pound</option>
                       </select>
                     </div>
                     <div>
@@ -958,7 +956,7 @@ export default function AdminPage() {
               <div className="bg-surface rounded-2xl p-5 border border-border">
                 <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Zap size={16} className="text-primary" />Platform Overview</h3>
                 <div className="text-sm text-muted space-y-2 leading-relaxed">
-                  <p><strong className="text-foreground">CashBlitz</strong> is a cash rewards platform where users earn money by completing offers (games, surveys, tasks), spinning the daily wheel, claiming daily login bonuses, and referring friends.</p>
+                  <p><strong className="text-foreground">CashBlitz</strong> is Canada&apos;s premier cash rewards platform where users earn CAD by completing offers (games, surveys, tasks), spinning the daily wheel, claiming daily login bonuses, and referring friends.</p>
                   <p><strong className="text-foreground">Tech Stack:</strong> Next.js 16, TypeScript, Prisma 7, PostgreSQL, NextAuth.js v5, Tailwind CSS v4, Framer Motion.</p>
                   <p><strong className="text-foreground">Deployment:</strong> Railway with Docker, auto-deploys from GitHub main branch.</p>
                 </div>
@@ -993,7 +991,7 @@ export default function AdminPage() {
               <div className="bg-surface rounded-2xl p-5 border border-border">
                 <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><DollarSign size={16} className="text-primary" />Financial System</h3>
                 <div className="text-sm text-muted space-y-2 leading-relaxed">
-                  <p><strong className="text-foreground">Cashouts:</strong> Users can withdraw via PayPal ($5 min), Visa ($10), Amazon ($5), Bitcoin ($10), Apple ($10), or Steam ($5). All zero-fee.</p>
+                  <p><strong className="text-foreground">Cashouts:</strong> Users can withdraw via Interac e-Transfer (C$5 min), PayPal (C$5), Visa (C$10), Amazon.ca (C$5), Bitcoin (C$10), Apple (C$10), or Steam (C$5). All zero-fee.</p>
                   <p><strong className="text-foreground">Payout Processing:</strong> Payouts start as &quot;pending&quot;. Admin can approve (→completed), reject (→rejected, auto-refunds balance), or set processing status via Payouts tab.</p>
                   <p><strong className="text-foreground">Transactions:</strong> Every balance change creates a Transaction record with type, amount, balanceBefore/After, and metadata for full audit trail.</p>
                   <p><strong className="text-foreground">Transaction Types:</strong> offer_reward, spin, daily_bonus, referral_bonus, withdraw, refund, admin_adjustment.</p>
@@ -1009,10 +1007,10 @@ export default function AdminPage() {
                   <p><strong className="text-foreground">Prize Distribution (weighted):</strong></p>
                   <div className="bg-surface-light rounded-xl p-3 border border-border mt-1">
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                      <span>$0.05 — 25% chance</span><span>$0.50 — 8% chance</span>
-                      <span>$0.10 — 25% chance</span><span>$1.00 — 4% chance</span>
-                      <span>$0.15 — 20% chance</span><span>$2.00 — 2% chance</span>
-                      <span>$0.25 — 15% chance</span><span>$5.00 — 1% chance</span>
+                      <span>C$0.05 — 25% chance</span><span>C$0.50 — 8% chance</span>
+                      <span>C$0.10 — 25% chance</span><span>C$1.00 — 4% chance</span>
+                      <span>C$0.15 — 20% chance</span><span>C$2.00 — 2% chance</span>
+                      <span>C$0.25 — 15% chance</span><span>C$5.00 — 1% chance</span>
                     </div>
                   </div>
                   <p><strong className="text-foreground">Server-side:</strong> Prize is determined server-side (not client). The frontend animates to the server&apos;s result.</p>
@@ -1026,13 +1024,13 @@ export default function AdminPage() {
                   <p><strong className="text-foreground">7-Day Escalating Calendar:</strong></p>
                   <div className="bg-surface-light rounded-xl p-3 border border-border mt-1">
                     <div className="grid grid-cols-7 gap-2 text-xs text-center">
-                      <div><strong>Day 1</strong><br/>$0.05</div>
-                      <div><strong>Day 2</strong><br/>$0.10</div>
-                      <div><strong>Day 3</strong><br/>$0.15</div>
-                      <div><strong>Day 4</strong><br/>$0.25</div>
-                      <div><strong>Day 5</strong><br/>$0.50</div>
-                      <div><strong>Day 6</strong><br/>$0.75</div>
-                      <div><strong>Day 7</strong><br/>$2.00</div>
+                      <div><strong>Day 1</strong><br/>C$0.05</div>
+                      <div><strong>Day 2</strong><br/>C$0.10</div>
+                      <div><strong>Day 3</strong><br/>C$0.15</div>
+                      <div><strong>Day 4</strong><br/>C$0.25</div>
+                      <div><strong>Day 5</strong><br/>C$0.50</div>
+                      <div><strong>Day 6</strong><br/>C$0.75</div>
+                      <div><strong>Day 7</strong><br/>C$2.00</div>
                     </div>
                   </div>
                   <p><strong className="text-foreground">Streak Logic:</strong> If a user misses a day, streak resets to Day 1. After Day 7, it cycles back to Day 1.</p>
@@ -1045,7 +1043,7 @@ export default function AdminPage() {
                 <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Users size={16} className="text-primary" />Referral System</h3>
                 <div className="text-sm text-muted space-y-2 leading-relaxed">
                   <p><strong className="text-foreground">How it works:</strong> Each user gets a unique referral code (auto-generated). Share link: /signup?ref=CODE.</p>
-                  <p><strong className="text-foreground">Bonus:</strong> Configurable referral bonus ($1.00 default) when referred user completes their first offer.</p>
+                  <p><strong className="text-foreground">Bonus:</strong> Configurable referral bonus (C$1.00 default) when referred user completes their first offer.</p>
                   <p><strong className="text-foreground">Tracking:</strong> Referral model tracks referrer, referee, status (pending/completed), and bonus amount.</p>
                 </div>
               </div>

@@ -6,9 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 
 const cashoutMethods = [
+  { id: "interac", name: "Interac e-Transfer", icon: "🏦", minAmount: 5, processingTime: "Instant", popular: true },
   { id: "paypal", name: "PayPal", icon: "💳", minAmount: 5, processingTime: "Instant", popular: true },
   { id: "visa", name: "Visa Gift Card", icon: "💎", minAmount: 10, processingTime: "1-2 hours", popular: false },
-  { id: "amazon", name: "Amazon Gift Card", icon: "🛒", minAmount: 5, processingTime: "Instant", popular: true },
+  { id: "amazon", name: "Amazon.ca Gift Card", icon: "🛒", minAmount: 5, processingTime: "Instant", popular: true },
   { id: "crypto", name: "Bitcoin", icon: "₿", minAmount: 10, processingTime: "15 minutes", popular: false },
   { id: "apple", name: "Apple Gift Card", icon: "🍎", minAmount: 10, processingTime: "1-2 hours", popular: false },
   { id: "steam", name: "Steam Gift Card", icon: "🎮", minAmount: 5, processingTime: "Instant", popular: false },
@@ -186,7 +187,7 @@ export default function CashoutPage() {
                         {cashoutMethods.find((m) => m.id === payout.method)?.name || payout.method}
                       </p>
                       <p className="text-[10px] text-muted">
-                        {new Date(payout.createdAt).toLocaleDateString("en-US", {
+                        {new Date(payout.createdAt).toLocaleDateString("en-CA", {
                           month: "short", day: "numeric", year: "numeric",
                           hour: "2-digit", minute: "2-digit",
                         })}
@@ -233,7 +234,7 @@ export default function CashoutPage() {
                       : "bg-surface-light text-foreground border border-border active:bg-border"
                   }`}
                 >
-                  ${amt}
+                  C${amt}
                 </button>
               ))}
             </div>
@@ -267,7 +268,7 @@ export default function CashoutPage() {
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[10px] text-muted flex items-center gap-0.5"><Clock size={8} /> {m.processingTime}</span>
-                      <span className="text-[10px] text-muted">Min: ${m.minAmount}</span>
+                      <span className="text-[10px] text-muted">Min: C${m.minAmount}</span>
                       <span className="text-[10px] text-primary font-medium">No fee</span>
                     </div>
                   </div>

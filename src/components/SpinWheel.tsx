@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 
-const PRIZE_LABELS = ["$0.05", "$0.10", "$0.15", "$0.25", "$0.50", "$1.00", "$2.00", "$5.00"];
+const PRIZE_LABELS = ["C$0.05", "C$0.10", "C$0.15", "C$0.25", "C$0.50", "C$1.00", "C$2.00", "C$5.00"];
 const colors = [
   "#00e676", "#1c2333", "#ffd600", "#1c2333",
   "#ff6bff", "#1c2333", "#00bcd4", "#1c2333",
@@ -231,7 +231,7 @@ export default function SpinWheel({ onClose, onBalanceUpdate }: SpinWheelProps) 
               <p className="text-xs text-muted">You won</p>
               <p className="text-3xl font-extrabold gradient-text-gold">{won}</p>
               <p className="text-[10px] text-primary mt-1">
-                +${wonAmount.toFixed(2)} added to your balance!
+                +C${wonAmount.toFixed(2)} added to your balance!
               </p>
             </motion.div>
           )}

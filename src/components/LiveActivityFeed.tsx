@@ -8,6 +8,8 @@ const firstNames = [
   "Alex", "Jordan", "Sam", "Taylor", "Casey", "Morgan", "Jamie", "Riley",
   "Quinn", "Avery", "Blake", "Drew", "Parker", "Hayden", "Charlie", "Dakota",
   "Sage", "Reese", "Finley", "Phoenix", "Cameron", "Rowan", "River", "Skyler",
+  "Jean-Pierre", "Marie-Claire", "Guillaume", "Isabelle", "Sophie", "Mathieu",
+  "Camille", "\u00c9tienne", "Luc", "\u00c9milie",
 ];
 
 const actions = [
@@ -30,12 +32,12 @@ function generateActivity() {
 
   let amount: string;
   if (action.verb === "cashed out") {
-    amount = `$${(Math.floor(Math.random() * 20) * 5 + 5).toFixed(2)}`;
+    amount = `C$${(Math.floor(Math.random() * 20) * 5 + 5).toFixed(2)}`;
   } else if (action.verb === "won") {
     const prizes = [0.05, 0.10, 0.25, 0.50, 1.00, 2.00];
-    amount = `$${prizes[Math.floor(Math.random() * prizes.length)].toFixed(2)}`;
+    amount = `C$${prizes[Math.floor(Math.random() * prizes.length)].toFixed(2)}`;
   } else {
-    amount = `$${(Math.random() * 50 + 1).toFixed(2)}`;
+    amount = `C$${(Math.random() * 50 + 1).toFixed(2)}`;
   }
 
   const timeAgo = `${Math.floor(Math.random() * 59) + 1}m ago`;
@@ -48,7 +50,7 @@ function generateActivity() {
     action: action.verb,
     emoji: action.emoji,
     color: action.color,
-    offer: action.verb === "won" ? "the daily spin" : action.verb === "cashed out" ? "via PayPal" : offer,
+    offer: action.verb === "won" ? "the daily spin" : action.verb === "cashed out" ? ["via Interac e-Transfer", "via PayPal", "via Amazon.ca"][Math.floor(Math.random() * 3)] : offer,
     amount,
     timeAgo,
   };

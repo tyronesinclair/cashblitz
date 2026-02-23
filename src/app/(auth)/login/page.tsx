@@ -131,22 +131,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Demo accounts info */}
-          <div className="mt-5 pt-5 border-t border-border">
-            <p className="text-[10px] text-muted text-center mb-2">Demo Accounts (seed the DB first at /api/admin/seed)</p>
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
-              <div className="bg-background rounded-lg p-2 border border-border">
-                <p className="font-bold text-foreground">Admin</p>
-                <p className="text-muted">admin@cashblitz.com</p>
-                <p className="text-muted">admin123</p>
-              </div>
-              <div className="bg-background rounded-lg p-2 border border-border">
-                <p className="font-bold text-foreground">User</p>
-                <p className="text-muted">demo@cashblitz.com</p>
-                <p className="text-muted">demo123</p>
-              </div>
-            </div>
-          </div>
         </div>
       </motion.div>
     </div>

@@ -56,9 +56,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (userId) {
         const dbUser = await prisma.user.findUnique({
           where: { id: userId },
-          select: { role: true, balance: true, streak: true },
+          select: { role: true, balance: true, streak: true, isBanned: true },
         });
         if (dbUser) {
+          if (dbUser.isBanned) {
+            return null;
+          }
           token.role = dbUser.role;
           token.balance = dbUser.balance;
           token.streak = dbUser.streak;

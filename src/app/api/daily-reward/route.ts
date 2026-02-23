@@ -100,113 +100,121 @@ export async function GET() {
 
 // POST: Claim today's daily reward
 export async function POST() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { balance: true, streak: true, lastLoginAt: true },
-  });
-
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
-
-  // Check if already claimed today
-  const now = new Date();
-  const startOfDay = new Date(now);
-  startOfDay.setUTCHours(0, 0, 0, 0);
-  const endOfDay = new Date(now);
-  endOfDay.setUTCHours(23, 59, 59, 999);
-
-  const todayClaim = await prisma.dailyReward.findFirst({
-    where: {
-      userId: session.user.id,
-      claimedAt: { gte: startOfDay, lte: endOfDay },
-    },
-  });
-
-  if (todayClaim) {
-    return NextResponse.json({ error: "Already claimed today" }, { status: 400 });
-  }
-
-  // Determine current streak day
-  const yesterday = new Date(now);
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-  const startOfYesterday = new Date(yesterday);
-  startOfYesterday.setUTCHours(0, 0, 0, 0);
-  const endOfYesterday = new Date(yesterday);
-  endOfYesterday.setUTCHours(23, 59, 59, 999);
-
-  const yesterdayClaim = await prisma.dailyReward.findFirst({
-    where: {
-      userId: session.user.id,
-      claimedAt: { gte: startOfYesterday, lte: endOfYesterday },
-    },
-    orderBy: { claimedAt: "desc" },
-  });
-
-  let streakDay = 1;
-  if (yesterdayClaim) {
-    streakDay = yesterdayClaim.day >= 7 ? 1 : yesterdayClaim.day + 1;
-  }
-
-  const reward = DAILY_REWARDS.find((r) => r.day === streakDay) || DAILY_REWARDS[0];
-
-  // Atomically credit balance and record reward
-  const [updatedUser, dailyReward] = await prisma.$transaction(async (tx) => {
-    const updatedUser = await tx.user.update({
+    const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      data: {
-        balance: { increment: reward.amount },
-        totalEarnings: { increment: reward.amount },
-        streak: streakDay,
-        lastLoginAt: now,
-        xp: { increment: 25 }, // 25 XP for daily login
-      },
-      select: { balance: true, streak: true },
+      select: { balance: true, streak: true, lastLoginAt: true },
     });
 
-    const dailyReward = await tx.dailyReward.create({
-      data: {
-        userId: session.user.id,
-        day: streakDay,
-        amount: reward.amount,
-      },
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    // Determine current streak day (outside transaction is fine since it's read-only context)
+    const yesterday = new Date(now);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    const startOfYesterday = new Date(yesterday);
+    startOfYesterday.setUTCHours(0, 0, 0, 0);
+    const endOfYesterday = new Date(yesterday);
+    endOfYesterday.setUTCHours(23, 59, 59, 999);
+
+    // Atomically check claim status and credit balance
+    const [updatedUser, dailyReward] = await prisma.$transaction(async (tx) => {
+      // Check if already claimed today INSIDE the transaction to prevent race conditions
+      const todayClaim = await tx.dailyReward.findFirst({
+        where: {
+          userId: session.user.id,
+          claimedAt: { gte: startOfDay, lte: endOfDay },
+        },
+      });
+
+      if (todayClaim) {
+        throw new Error("Already claimed today");
+      }
+
+      const yesterdayClaim = await tx.dailyReward.findFirst({
+        where: {
+          userId: session.user.id,
+          claimedAt: { gte: startOfYesterday, lte: endOfYesterday },
+        },
+        orderBy: { claimedAt: "desc" },
+      });
+
+      let streakDay = 1;
+      if (yesterdayClaim) {
+        streakDay = yesterdayClaim.day >= 7 ? 1 : yesterdayClaim.day + 1;
+      }
+
+      const reward = DAILY_REWARDS.find((r) => r.day === streakDay) || DAILY_REWARDS[0];
+
+      const updatedUser = await tx.user.update({
+        where: { id: session.user.id },
+        data: {
+          balance: { increment: reward.amount },
+          totalEarnings: { increment: reward.amount },
+          streak: streakDay,
+          lastLoginAt: now,
+          xp: { increment: 25 }, // 25 XP for daily login
+        },
+        select: { balance: true, streak: true },
+      });
+
+      const dailyReward = await tx.dailyReward.create({
+        data: {
+          userId: session.user.id,
+          day: streakDay,
+          amount: reward.amount,
+        },
+      });
+
+      await tx.transaction.create({
+        data: {
+          userId: session.user.id,
+          type: "daily_bonus",
+          amount: reward.amount,
+          balanceBefore: user.balance,
+          balanceAfter: updatedUser.balance,
+          description: `Day ${streakDay} daily login bonus: C$${reward.amount.toFixed(2)}`,
+          metadata: JSON.stringify({ day: streakDay }),
+        },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: session.user.id,
+          type: "reward",
+          title: `Day ${streakDay} Bonus!`,
+          message: `You earned C$${reward.amount.toFixed(2)} for your Day ${streakDay} login streak!`,
+        },
+      });
+
+      return [updatedUser, dailyReward, streakDay, reward] as const;
     });
 
-    await tx.transaction.create({
-      data: {
-        userId: session.user.id,
-        type: "daily_bonus",
-        amount: reward.amount,
-        balanceBefore: user.balance,
-        balanceAfter: updatedUser.balance,
-        description: `Day ${streakDay} daily login bonus: $${reward.amount.toFixed(2)}`,
-        metadata: JSON.stringify({ day: streakDay }),
-      },
+    return NextResponse.json({
+      claimed: true,
+      day: updatedUser.streak,
+      amount: dailyReward.amount,
+      newBalance: updatedUser.balance,
+      newStreak: updatedUser.streak,
+      rewardId: dailyReward.id,
     });
-
-    await tx.notification.create({
-      data: {
-        userId: session.user.id,
-        type: "reward",
-        title: `Day ${streakDay} Bonus!`,
-        message: `You earned $${reward.amount.toFixed(2)} for your Day ${streakDay} login streak!`,
-      },
-    });
-
-    return [updatedUser, dailyReward];
-  });
-
-  return NextResponse.json({
-    claimed: true,
-    day: streakDay,
-    amount: reward.amount,
-    newBalance: updatedUser.balance,
-    newStreak: updatedUser.streak,
-    rewardId: dailyReward.id,
-  });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal server error";
+    if (message === "Already claimed today") {
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

@@ -14,7 +14,7 @@ const achievements = [
   { id: "first_offer", name: "First Offer", desc: "Complete your first offer", icon: Star, color: "text-accent-2" },
   { id: "speed_runner", name: "Speed Runner", desc: "Complete within 24 hours", icon: Zap, color: "text-primary" },
   { id: "streak_master", name: "Streak Master", desc: "7-day login streak", icon: Flame, color: "text-orange-500" },
-  { id: "big_earner", name: "Big Earner", desc: "Earn over $100", icon: DollarSign, color: "text-primary" },
+  { id: "big_earner", name: "Big Earner", desc: "Earn over C$100", icon: DollarSign, color: "text-primary" },
   { id: "game_king", name: "Game King", desc: "Complete 10 game offers", icon: Crown, color: "text-accent-2" },
   { id: "survey_pro", name: "Survey Pro", desc: "Complete 20 surveys", icon: Target, color: "text-cyan-400" },
 ];
@@ -110,7 +110,7 @@ export default function RewardsPage() {
 
       if (res.ok) {
         setClaimedToday(true);
-        setClaimMessage(`+$${data.amount.toFixed(2)} Day ${data.day} bonus claimed!`);
+        setClaimMessage(`+C$${data.amount.toFixed(2)} Day ${data.day} bonus claimed!`);
         if (stats) {
           setStats({ ...stats, balance: data.newBalance, streak: data.newStreak });
         }
@@ -310,7 +310,7 @@ export default function RewardsPage() {
                     >
                       <p className="text-[8px] text-muted">Day {bonus.day}</p>
                       <p className={`text-[10px] font-bold ${bonus.claimed ? "text-primary" : bonus.isToday ? "text-accent-2" : "text-foreground"}`}>
-                        ${bonus.amount.toFixed(2)}
+                        C${bonus.amount.toFixed(2)}
                       </p>
                       {bonus.claimed && (
                         <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary rounded-full flex items-center justify-center">

@@ -12,9 +12,9 @@ import { useState } from "react";
 const milestones = [
   { year: "2024", event: "CashBlitz founded", detail: "Started with a mission to make earning rewards fun and accessible." },
   { year: "2024", event: "10K users milestone", detail: "Reached 10,000 active users within our first 3 months." },
-  { year: "2025", event: "$1M paid out", detail: "Crossed $1 million in total payouts to our community." },
-  { year: "2025", event: "100K users", detail: "Community grew to over 100,000 users across 80+ countries." },
-  { year: "2026", event: "$2.4M paid out", detail: "Total payouts exceeded $2.4 million with 150K+ active users." },
+  { year: "2025", event: "C$1M paid out", detail: "Crossed C$1 million in total payouts to our community." },
+  { year: "2025", event: "100K users", detail: "Community grew to over 100,000 Canadian users from coast to coast." },
+  { year: "2026", event: "C$2.4M paid out", detail: "Total payouts exceeded C$2.4 million with 150K+ active Canadian users." },
   { year: "2026", event: "200+ offers", detail: "Partnered with 200+ advertisers to bring the best earning opportunities." },
 ];
 
@@ -23,13 +23,13 @@ const values = [
   { icon: Heart, title: "Community First", desc: "Every decision we make starts with our users. Your feedback shapes our platform." },
   { icon: Award, title: "Fair Rewards", desc: "We negotiate the best payouts from advertisers and pass the maximum value to you." },
   { icon: Lock, title: "Privacy & Security", desc: "Your data is encrypted and never sold. We use bank-level security to protect your information." },
-  { icon: Globe, title: "Global Access", desc: "Available in 100+ countries. Everyone deserves the opportunity to earn extra income." },
+  { icon: Globe, title: "Coast to Coast", desc: "Available to Canadians from Victoria to St. John's. Every province, every territory." },
   { icon: Target, title: "Quality Offers", desc: "We vet every offer on our platform. If it's not worth your time, it doesn't make the cut." },
 ];
 
 const teamStats = [
   { label: "Team Members", value: "35+", icon: Users },
-  { label: "Countries Served", value: "100+", icon: Globe },
+  { label: "Provinces & Territories", value: "13", icon: Globe },
   { label: "Uptime", value: "99.9%", icon: Clock },
   { label: "Support Response", value: "<2hrs", icon: MessageCircle },
 ];
@@ -97,7 +97,7 @@ export default function AboutPage() {
               <br className="hidden sm:block" /> For Everyone
             </h1>
             <p className="text-base sm:text-lg text-muted leading-relaxed max-w-2xl mx-auto mb-8">
-              CashBlitz was built on a simple idea: everyone should be able to earn extra income doing things they enjoy.
+              Based in Canada and built specifically for Canadians, CashBlitz was built on a simple idea: everyone should be able to earn extra income doing things they enjoy.
               We connect people with brands who want real engagement — and we make sure you get paid fairly for it.
             </p>
             <div className="flex flex-wrap justify-center gap-6 text-sm text-muted">
@@ -107,11 +107,11 @@ export default function AboutPage() {
               </div>
               <div className="flex items-center gap-2">
                 <TrendingUp size={16} className="text-primary" />
-                <span><span className="text-foreground font-bold">$2.4M+</span> Paid Out</span>
+                <span><span className="text-foreground font-bold">C$2.4M+</span> Paid Out</span>
               </div>
               <div className="flex items-center gap-2">
                 <Globe size={16} className="text-primary" />
-                <span><span className="text-foreground font-bold">100+</span> Countries</span>
+                <span><span className="text-foreground font-bold">13</span> Provinces &amp; Territories</span>
               </div>
             </div>
           </motion.div>
@@ -275,7 +275,7 @@ export default function AboutPage() {
               Join the <span className="gradient-text">CashBlitz</span> Community
             </h2>
             <p className="text-muted text-base sm:text-lg max-w-lg mx-auto mb-8">
-              Be part of 150,000+ users earning real cash every day. Your time is worth more than you think.
+              Be part of 150,000+ Canadians earning real cash every day. Your time is worth more than you think.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-3">
               <Link href="/signup" className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-primary hover:bg-primary-dark text-background font-bold text-lg rounded-2xl transition-all pulse-glow press-scale">
@@ -302,11 +302,11 @@ export default function AboutPage() {
                 <span className="gradient-text">CASH</span><span className="text-foreground">BLITZ</span>
               </span>
             </Link>
-            <p className="text-xs text-muted">&copy; 2026 CashBlitz. All rights reserved.</p>
+            <p className="text-xs text-muted">&copy; 2026 CashBlitz. All rights reserved. Operated in Canada.</p>
             <div className="flex gap-4 text-xs text-muted">
               <Link href="/" className="hover:text-foreground">Home</Link>
-              <span className="hover:text-foreground cursor-pointer">Privacy</span>
-              <span className="hover:text-foreground cursor-pointer">Terms</span>
+              <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
+              <Link href="/terms" className="hover:text-foreground">Terms</Link>
             </div>
           </div>
         </div>

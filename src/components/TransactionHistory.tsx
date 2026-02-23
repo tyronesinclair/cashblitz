@@ -61,7 +61,7 @@ export default function TransactionHistory() {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return date.toLocaleDateString("en-CA", { month: "short", day: "numeric" });
   };
 
   const filters = [
@@ -129,9 +129,9 @@ export default function TransactionHistory() {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className={`text-xs font-bold ${isPositive ? "text-primary" : "text-danger"}`}>
-                    {isPositive ? "+" : ""}${Math.abs(tx.amount).toFixed(2)}
+                    {isPositive ? "+" : ""}C${Math.abs(tx.amount).toFixed(2)}
                   </p>
-                  <p className="text-[8px] text-muted">${tx.balanceAfter.toFixed(2)}</p>
+                  <p className="text-[8px] text-muted">C${tx.balanceAfter.toFixed(2)}</p>
                 </div>
               </motion.div>
             );

@@ -81,7 +81,7 @@ export default function ReferralCard() {
         <h3 className="font-bold text-sm text-foreground">Invite Friends</h3>
       </div>
       <p className="text-[10px] text-muted mb-3">
-        Share your referral link and earn $1.00 for every friend who signs up and completes their first offer!
+        Share your referral link and earn C$1.00 for every friend who signs up and completes their first offer!
       </p>
 
       {/* Referral link */}
@@ -128,7 +128,7 @@ export default function ReferralCard() {
         </div>
         <div className="bg-surface-light rounded-xl p-2.5 text-center border border-border">
           <TrendingUp size={14} className="text-primary mx-auto mb-1" />
-          <p className="text-sm font-extrabold text-primary">${stats.totalEarned.toFixed(2)}</p>
+          <p className="text-sm font-extrabold text-primary">C${stats.totalEarned.toFixed(2)}</p>
           <p className="text-[9px] text-muted">Earned</p>
         </div>
       </div>

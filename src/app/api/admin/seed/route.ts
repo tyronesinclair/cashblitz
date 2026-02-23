@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { isAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 import { offers as seedOffers } from "@/data/offers";
 
 export async function POST() {
+  if (!(await isAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   // Create admin user if not exists
   const adminEmail = "admin@cashblitz.com";
   const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
@@ -74,6 +76,6 @@ export async function POST() {
 
   return NextResponse.json({
     success: true,
-    message: "Seeded admin (admin@cashblitz.com / admin123), demo user (demo@cashblitz.com / demo123), and offers",
+    message: "Database seeded successfully with admin user, demo user, and sample offers",
   });
 }

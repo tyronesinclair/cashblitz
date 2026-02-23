@@ -298,7 +298,7 @@ export default function EarnPage() {
           <p className="text-sm text-muted mt-0.5">
             <span className="text-primary font-bold">CAD</span>{" "}
             <span className="font-bold text-foreground">
-              {totalAvailable.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              {totalAvailable.toLocaleString("en-CA", { minimumFractionDigits: 2 })}
             </span>{" "}
             to earn
             {activeOfferCount > 0 && (

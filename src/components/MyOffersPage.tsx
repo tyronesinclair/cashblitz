@@ -103,7 +103,7 @@ export default function MyOffersPage() {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return date.toLocaleDateString("en-CA", { month: "short", day: "numeric" });
   };
 
   if (loading) {

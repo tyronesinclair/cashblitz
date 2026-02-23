@@ -11,15 +11,14 @@ const inter = Inter({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  userScalable: true,
   viewportFit: "cover",
   themeColor: "#0d1117",
 };
 
 export const metadata: Metadata = {
-  title: "CashBlitz - Earn Cash Playing Games",
-  description: "Play games, complete tasks, and earn real cash rewards. The most exciting way to make money!",
+  title: "CashBlitz - Canada's #1 Cash Rewards Platform",
+  description: "Canada's top rewards platform. Play games, complete tasks, and earn real Canadian dollars. Instant payouts via Interac e-Transfer, PayPal, and more.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -33,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en-CA" className="dark">
       <body className={`${inter.variable} antialiased bg-background`}>
         <SessionProvider>{children}</SessionProvider>
       </body>

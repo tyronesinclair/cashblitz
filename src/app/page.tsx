@@ -13,8 +13,8 @@ import {
 /* ═══════════════════ DATA ═══════════════════ */
 
 const stats = [
-  { label: "Total Paid Out", value: "$2.4M+", icon: DollarSign, color: "text-primary" },
-  { label: "Active Users", value: "150K+", icon: Users, color: "text-cyan-400" },
+  { label: "Total Paid Out", value: "C$2.4M+", icon: DollarSign, color: "text-primary" },
+  { label: "Canadian Users", value: "150K+", icon: Users, color: "text-cyan-400" },
   { label: "Available Offers", value: "200+", icon: Gamepad2, color: "text-accent-2" },
   { label: "Avg. Rating", value: "4.8★", icon: Star, color: "text-accent" },
 ];
@@ -23,22 +23,23 @@ const steps = [
   { num: 1, title: "Create Your Free Account", desc: "Sign up in seconds. No credit card, no strings attached.", icon: "🚀", color: "from-primary to-emerald-400" },
   { num: 2, title: "Browse & Pick Offers", desc: "Choose from games, surveys, and tasks that match your vibe.", icon: "🎯", color: "from-cyan-400 to-blue-500" },
   { num: 3, title: "Complete & Earn Cash", desc: "Hit milestones and watch your balance grow in real time.", icon: "💰", color: "from-accent-2 to-orange-500" },
-  { num: 4, title: "Withdraw Instantly", desc: "Cash out via PayPal, crypto, gift cards — zero fees.", icon: "🏦", color: "from-accent to-purple-500" },
+  { num: 4, title: "Withdraw Instantly", desc: "Cash out via Interac e-Transfer, PayPal, crypto, or gift cards — zero fees.", icon: "🏦", color: "from-accent to-purple-500" },
 ];
 
 const testimonials = [
-  { name: "Sarah K.", location: "Toronto, CA", amount: "$347", timeframe: "1st month", quote: "Made this in my first month just playing games on my commute! The payouts are legit and super fast.", avatar: "S", rating: 5 },
-  { name: "Marcus D.", location: "New York, US", amount: "$1,200", timeframe: "3 months", quote: "Best side hustle I've found. The game offers pay really well and I can do it while watching TV.", avatar: "M", rating: 5 },
-  { name: "Jess T.", location: "London, UK", amount: "$89", timeframe: "1 week", quote: "Got my first PayPal payout in just 2 days. Now I'm hooked — earning every day.", avatar: "J", rating: 5 },
-  { name: "Alex W.", location: "Sydney, AU", amount: "$560", timeframe: "2 months", quote: "I was skeptical at first but the earnings are real. Withdrawn to Bitcoin multiple times.", avatar: "A", rating: 5 },
-  { name: "Priya M.", location: "Mumbai, IN", amount: "$215", timeframe: "6 weeks", quote: "Love that I can earn while commuting. The surveys are quick and the game offers are fun.", avatar: "P", rating: 4 },
-  { name: "Tom B.", location: "Berlin, DE", amount: "$780", timeframe: "2 months", quote: "The premium offers are where the real money is. Made $300 from one game alone!", avatar: "T", rating: 5 },
+  { name: "Sarah K.", location: "Toronto, ON", amount: "C$347", timeframe: "1st month", quote: "Made this in my first month just playing games on my commute! The payouts are legit and super fast.", avatar: "S", rating: 5 },
+  { name: "Marcus D.", location: "Vancouver, BC", amount: "C$1,200", timeframe: "3 months", quote: "Best side hustle I've found. The game offers pay really well and I can do it while watching TV.", avatar: "M", rating: 5 },
+  { name: "Jess T.", location: "Montreal, QC", amount: "C$89", timeframe: "1 week", quote: "Got my first PayPal payout in just 2 days. Now I'm hooked — earning every day.", avatar: "J", rating: 5 },
+  { name: "Alex W.", location: "Calgary, AB", amount: "C$560", timeframe: "2 months", quote: "I was skeptical at first but the earnings are real. Withdrawn to Bitcoin multiple times.", avatar: "A", rating: 5 },
+  { name: "Priya S.", location: "Mississauga, ON", amount: "C$215", timeframe: "6 weeks", quote: "Love that I can earn while commuting. The surveys are quick and the game offers are fun.", avatar: "P", rating: 4 },
+  { name: "Tom B.", location: "Ottawa, ON", amount: "C$780", timeframe: "2 months", quote: "The premium offers are where the real money is. Made $300 from one game alone!", avatar: "T", rating: 5 },
 ];
 
 const payoutMethods = [
+  { name: "Interac", icon: "🏦", time: "Instant" },
   { name: "PayPal", icon: "💳", time: "Instant" },
   { name: "Visa", icon: "💎", time: "1-2 hours" },
-  { name: "Amazon", icon: "🛒", time: "Instant" },
+  { name: "Amazon.ca", icon: "🛒", time: "Instant" },
   { name: "Bitcoin", icon: "₿", time: "15 min" },
   { name: "Apple", icon: "🍎", time: "1-2 hours" },
   { name: "Steam", icon: "🎮", time: "Instant" },
@@ -55,9 +56,9 @@ const features = [
   { icon: Shield, title: "100% Safe & Legit", desc: "Trusted by 150K+ users. Your data is encrypted and never sold." },
   { icon: Clock, title: "Instant Payouts", desc: "No waiting weeks. Get paid the moment you hit the minimum." },
   { icon: Gift, title: "Daily Bonuses", desc: "Spin the wheel, complete streaks, and unlock bonus rewards every day." },
-  { icon: Globe, title: "Works Worldwide", desc: "Available in 100+ countries. Earn from anywhere in the world." },
-  { icon: Target, title: "High-Paying Offers", desc: "Earn up to $1,000+ per offer. Premium games pay the most." },
-  { icon: Heart, title: "Referral Program", desc: "Invite friends and earn $5 for each person who signs up." },
+  { icon: Globe, title: "Made for Canadians", desc: "Purpose-built for the Canadian market. Earn in CAD, cash out with Interac e-Transfer and more." },
+  { icon: Target, title: "High-Paying Offers", desc: "Earn up to C$1,000+ per offer. Premium games pay the most." },
+  { icon: Heart, title: "Referral Program", desc: "Invite friends and earn C$5 for each person who signs up." },
 ];
 
 const faqs = [
@@ -67,11 +68,11 @@ const faqs = [
   },
   {
     q: "How much can I earn?",
-    a: "It depends on how active you are. Casual users earn $50-200/month, while power users can earn $500-1,000+ by focusing on premium game offers.",
+    a: "It depends on how active you are. Casual users earn C$50-200/month, while power users can earn C$500-1,000+ by focusing on premium game offers.",
   },
   {
     q: "How do payouts work?",
-    a: "Once you reach the minimum withdrawal amount ($5 for most methods), you can cash out instantly via PayPal, gift cards, or cryptocurrency. No fees ever.",
+    a: "Once you reach the minimum withdrawal amount (C$5 for most methods), you can cash out instantly via PayPal, gift cards, or cryptocurrency. No fees ever.",
   },
   {
     q: "What types of offers are available?",
@@ -95,10 +96,9 @@ const footerLinks: Record<string, { label: string; href: string }[]> = {
     { label: "Sign Up", href: "/signup" },
   ],
   Company: [
-    { label: "About Us", href: "/about" },
-    { label: "Careers", href: "/about" },
-    { label: "Press", href: "/about" },
-    { label: "Blog", href: "/about" },
+    { label: "About", href: "/about" },
+    { label: "FAQ", href: "#faq" },
+    { label: "How It Works", href: "#how-it-works" },
   ],
   Support: [
     { label: "Help Center", href: "/about" },
@@ -107,10 +107,10 @@ const footerLinks: Record<string, { label: string; href: string }[]> = {
     { label: "Sign Up", href: "/signup" },
   ],
   Legal: [
-    { label: "Privacy Policy", href: "/about" },
-    { label: "Terms of Service", href: "/about" },
-    { label: "Cookie Policy", href: "/about" },
-    { label: "GDPR", href: "/about" },
+    { label: "Privacy Policy", href: "/privacy" },
+    { label: "Terms of Service", href: "/terms" },
+    { label: "Cookie Policy", href: "/privacy" },
+    { label: "PIPEDA Compliance", href: "/privacy" },
   ],
 };
 
@@ -127,7 +127,7 @@ export default function LandingPage() {
       {/* ══════════════════════════════════════════ */}
       <nav className="sticky top-0 z-50 bg-surface/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
               <Zap size={17} className="text-background" fill="currentColor" />
             </div>
@@ -135,7 +135,7 @@ export default function LandingPage() {
               <span className="gradient-text">CASH</span>
               <span className="text-foreground">BLITZ</span>
             </span>
-          </div>
+          </Link>
 
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-6">
@@ -219,7 +219,7 @@ export default function LandingPage() {
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 mb-6">
                   <Flame size={14} className="text-primary" />
-                  <span className="text-xs font-bold text-primary">#1 Rewards Platform — 2026</span>
+                  <span className="text-xs font-bold text-primary">Canada&apos;s #1 Rewards Platform — 2026</span>
                 </div>
 
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-foreground leading-[1.1] mb-5">
@@ -268,7 +268,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Users size={14} className="text-primary" />
-                    <span>150K+ Users</span>
+                    <span>150K+ Canadian Users</span>
                   </div>
                 </div>
               </motion.div>
@@ -365,7 +365,7 @@ export default function LandingPage() {
                   className="absolute -top-4 -right-4 bg-accent-2/20 border border-accent-2/30 rounded-xl px-3 py-2 flex items-center gap-2"
                 >
                   <TrendingUp size={14} className="text-accent-2" />
-                  <span className="text-xs font-bold text-accent-2">+$2.4M paid</span>
+                  <span className="text-xs font-bold text-accent-2">+C$2.4M paid</span>
                 </motion.div>
 
                 <motion.div
@@ -419,7 +419,7 @@ export default function LandingPage() {
                 <span className="text-xs font-bold text-accent-2">Top Earning Opportunities</span>
               </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-foreground mb-3">
-                Earn Up to <span className="gradient-text-gold">$1,186</span> Per Offer
+                Earn Up to <span className="gradient-text-gold">C$1,186</span> Per Offer
               </h2>
               <p className="text-muted max-w-lg mx-auto text-sm sm:text-base">
                 Premium game offers pay the most. Here are some of our top earners right now.
@@ -563,7 +563,7 @@ export default function LandingPage() {
                 Real People, <span className="gradient-text-gold">Real Earnings</span>
               </h2>
               <p className="text-muted max-w-md mx-auto text-sm sm:text-base">
-                Join 150,000+ users earning real cash every day
+                Join 150,000+ Canadian Users earning real cash every day
               </p>
             </motion.div>
           </div>
@@ -648,7 +648,7 @@ export default function LandingPage() {
             </div>
             <div className="flex-1 text-center sm:text-left">
               <h3 className="font-bold text-foreground text-lg mb-1">Zero Fees, Always</h3>
-              <p className="text-sm text-muted">We never charge withdrawal fees. The amount you see is the amount you get. Minimum withdrawal starts at just $5.</p>
+              <p className="text-sm text-muted">We never charge withdrawal fees. The amount you see is the amount you get. Minimum withdrawal starts at just C$5.</p>
             </div>
             <Link
               href="/signup"
@@ -734,7 +734,7 @@ export default function LandingPage() {
               Ready to Start <span className="gradient-text">Earning</span>?
             </h2>
             <p className="text-muted text-base sm:text-lg max-w-lg mx-auto mb-8">
-              Join 150,000+ users who are already earning real cash. Sign up free today.
+              Join 150,000+ Canadian Users who are already earning real cash. Sign up free today.
             </p>
             <Link
               href="/signup"
@@ -767,7 +767,7 @@ export default function LandingPage() {
                 </span>
               </div>
               <p className="text-xs text-muted leading-relaxed max-w-xs">
-                The #1 rewards platform. Earn real cash by playing games, completing surveys, and simple tasks.
+                Canada&apos;s #1 rewards platform. Earn real CAD by playing games, completing surveys, and simple tasks.
               </p>
             </div>
 
@@ -778,7 +778,7 @@ export default function LandingPage() {
                 <ul className="space-y-2">
                   {links.map((link) => (
                     <li key={link.label}>
-                      <a href={link.href} className="text-xs text-muted hover:text-foreground cursor-pointer transition-colors">{link.label}</a>
+                      <Link href={link.href} className="text-xs text-muted hover:text-foreground cursor-pointer transition-colors">{link.label}</Link>
                     </li>
                   ))}
                 </ul>
@@ -788,11 +788,11 @@ export default function LandingPage() {
 
           {/* Bottom bar */}
           <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-muted">&copy; 2026 CashBlitz. All rights reserved.</p>
+            <p className="text-xs text-muted">&copy; 2026 CashBlitz. All rights reserved. Operated in Canada.</p>
             <div className="flex items-center gap-4 text-xs text-muted">
-              <a href="/about" className="hover:text-foreground cursor-pointer">Privacy Policy</a>
-              <a href="/about" className="hover:text-foreground cursor-pointer">Terms of Service</a>
-              <a href="/about" className="hover:text-foreground cursor-pointer">Cookie Policy</a>
+              <Link href="/privacy" className="hover:text-foreground cursor-pointer">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-foreground cursor-pointer">Terms of Service</Link>
+              <Link href="/privacy" className="hover:text-foreground cursor-pointer">Cookie Policy</Link>
             </div>
           </div>
         </div>
