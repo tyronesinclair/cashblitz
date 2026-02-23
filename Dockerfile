@@ -17,7 +17,7 @@ COPY . .
 # Generate Prisma client
 RUN npx prisma generate
 
-# Build the Next.js app
+# Build the Next.js app (standalone output)
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
@@ -32,20 +32,19 @@ ENV HOSTNAME="0.0.0.0"
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy standalone output
+# Copy standalone output (includes bundled node_modules)
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Copy Prisma files for db push
+# Copy Prisma schema + CLI for db push at startup
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 USER nextjs
 
 EXPOSE 3000
 
-# Run prisma db push then start the standalone server
+# Push DB schema then start the standalone server
 CMD ["sh", "-c", "npx prisma db push --skip-generate && node server.js"]
