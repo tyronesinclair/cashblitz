@@ -86,6 +86,15 @@ export default function OfferModal({ offer, onClose, onOfferStarted }: OfferModa
     return () => { document.body.style.overflow = ""; };
   }, [offer]);
 
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   if (!offer) return null;
 
   const PlatformIcon = platformIcon[offer.platform];
@@ -96,6 +105,9 @@ export default function OfferModal({ offer, onClose, onOfferStarted }: OfferModa
   return (
     <AnimatePresence>
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${offer.name} offer details`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -126,17 +138,11 @@ export default function OfferModal({ offer, onClose, onOfferStarted }: OfferModa
             <div className="relative mx-4 rounded-2xl overflow-hidden h-44 sm:h-52">
               <img src={offer.image} alt={offer.name} className="w-full h-full object-cover" />
               <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1">
-                <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center">
-                  <span className="text-[7px] font-bold text-white">A</span>
-                </div>
                 <span className="text-xs font-bold text-white">{offer.rating}</span>
                 <Star size={9} className="text-yellow-400 fill-yellow-400" />
               </div>
               <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-sm rounded-lg p-1.5">
                 <PlatformIcon size={14} className="text-white" />
-              </div>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 bg-black/40 rounded-full flex items-center justify-center">
-                <ChevronRight size={14} className="text-white" />
               </div>
             </div>
 

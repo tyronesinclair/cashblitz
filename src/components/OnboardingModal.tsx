@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Gift, DollarSign, Trophy, ChevronRight, X, Sparkles } from "lucide-react";
 
@@ -59,8 +59,20 @@ export default function OnboardingModal({ onComplete, userName }: OnboardingModa
   const Icon = step.icon;
   const isLast = currentStep === steps.length - 1;
 
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onComplete();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onComplete]);
+
   return (
     <motion.div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Welcome to CashBlitz"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

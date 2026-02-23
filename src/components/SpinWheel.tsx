@@ -137,8 +137,20 @@ export default function SpinWheel({ onClose, onBalanceUpdate }: SpinWheelProps) 
     onClose();
   };
 
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleClose]);
+
   return (
     <motion.div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Daily Spin Wheel"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

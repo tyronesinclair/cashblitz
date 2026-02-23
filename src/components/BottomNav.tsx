@@ -20,8 +20,8 @@ const tabs = [
 export default function BottomNav({
   activeTab,
   onTabChange,
-  myOffersCount = 3,
-  rewardsBadge = true,
+  myOffersCount = 0,
+  rewardsBadge = false,
 }: BottomNavProps) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur-lg border-t border-border safe-bottom">

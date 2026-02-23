@@ -101,6 +101,16 @@ export default function DashboardPage() {
     }
   }, [session]);
 
+  // Listen for tab switch events from child components (e.g. referral banner)
+  useEffect(() => {
+    const handleSwitchTab = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (typeof detail === "string") setActiveTab(detail);
+    };
+    window.addEventListener("switchTab", handleSwitchTab);
+    return () => window.removeEventListener("switchTab", handleSwitchTab);
+  }, []);
+
   // Show onboarding for first-time users
   useEffect(() => {
     if (status === "authenticated" && session?.user) {

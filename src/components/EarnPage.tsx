@@ -445,6 +445,10 @@ export default function EarnPage() {
         <div className="px-4 mt-6 mb-4">
           <motion.div
             whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              // Navigate to rewards tab via custom event (dashboard listens for this)
+              window.dispatchEvent(new CustomEvent("switchTab", { detail: "rewards" }));
+            }}
             className="bg-gradient-to-r from-primary/10 to-primary-dark/10 border border-primary/20 rounded-2xl p-4 flex items-center gap-3 cursor-pointer press-scale"
           >
             <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center flex-shrink-0">

@@ -103,6 +103,102 @@ const adminTabs = [
   { id: "docs" as AdminTab, label: "Docs", icon: BookOpen },
 ];
 
+/* ═══════════════ SETTINGS TAB ═══════════════ */
+
+function SettingsTab({ onSuccess, onError, onReseed }: { onSuccess: (msg: string) => void; onError: (msg: string) => void; onReseed: () => void }) {
+  const [siteName, setSiteName] = useState("CashBlitz");
+  const [minWithdrawal, setMinWithdrawal] = useState(5);
+  const [referralBonus, setReferralBonus] = useState(5);
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  // Load settings from API
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const res = await fetch("/api/admin/settings");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.siteName) setSiteName(data.siteName);
+          if (data.minWithdrawal) setMinWithdrawal(parseFloat(data.minWithdrawal));
+          if (data.referralBonus) setReferralBonus(parseFloat(data.referralBonus));
+        }
+      } catch { /* use defaults */ }
+    }
+    loadSettings();
+  }, []);
+
+  const saveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteName, minWithdrawal, referralBonus }),
+      });
+      if (res.ok) {
+        onSuccess("Settings saved!");
+      } else {
+        onError("Failed to save settings");
+      }
+    } catch {
+      onError("Network error saving settings");
+    }
+    setSavingSettings(false);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto">
+      <div className="space-y-4">
+        {/* General Settings */}
+        <div className="bg-surface rounded-2xl p-5 border border-border">
+          <h3 className="font-bold text-foreground text-sm mb-4 flex items-center gap-2"><Settings size={16} className="text-primary" />General Settings</h3>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-muted mb-1.5">Site Name</label>
+              <input type="text" value={siteName} onChange={(e) => setSiteName(e.target.value)} className="w-full bg-background border border-border rounded-xl py-2.5 px-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted mb-1.5">Currency</label>
+              <select defaultValue="CAD" className="w-full bg-background border border-border rounded-xl py-2.5 px-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors">
+                <option value="CAD">CAD - Canadian Dollar</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted mb-1.5">Min Withdrawal ($)</label>
+              <input type="number" value={minWithdrawal} onChange={(e) => setMinWithdrawal(parseFloat(e.target.value) || 0)} className="w-full bg-background border border-border rounded-xl py-2.5 px-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors" min="1" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted mb-1.5">Referral Bonus ($)</label>
+              <input type="number" value={referralBonus} onChange={(e) => setReferralBonus(parseFloat(e.target.value) || 0)} className="w-full bg-background border border-border rounded-xl py-2.5 px-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors" min="0" step="0.5" />
+            </div>
+          </div>
+          <button onClick={saveSettings} disabled={savingSettings}
+            className={`mt-4 flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all press-scale ${savingSettings ? "bg-surface-light text-muted cursor-not-allowed" : "bg-primary text-background hover:bg-primary-dark"}`}>
+            <Save size={14} />{savingSettings ? "Saving..." : "Save Settings"}
+          </button>
+        </div>
+
+        {/* Danger Zone */}
+        <div className="bg-surface rounded-2xl p-5 border border-danger/20">
+          <h3 className="font-bold text-danger text-sm mb-4 flex items-center gap-2"><AlertCircle size={16} />Danger Zone</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-danger/5 rounded-xl border border-danger/10">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Re-seed Database</p>
+                <p className="text-[10px] text-muted">Reset demo data (admin + demo user + offers)</p>
+              </div>
+              <button onClick={onReseed}
+                className="px-3 py-1.5 bg-danger/10 text-danger text-xs font-bold rounded-lg hover:bg-danger/20 transition-colors press-scale">
+                Re-seed
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 /* ═══════════════ COMPONENT ═══════════════ */
 
 export default function AdminPage() {
@@ -864,79 +960,15 @@ export default function AdminPage() {
           {/* ══════ SETTINGS TAB ══════ */}
           {/* ═══════════════════════════════════════ */}
           {activeTab === "settings" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto">
-              <div className="space-y-4">
-                {/* General Settings */}
-                <div className="bg-surface rounded-2xl p-5 border border-border">
-                  <h3 className="font-bold text-foreground text-sm mb-4 flex items-center gap-2"><Settings size={16} className="text-primary" />General Settings</h3>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-muted mb-1.5">Site Name</label>
-                      <input type="text" defaultValue="CashBlitz" className="w-full bg-background border border-border rounded-xl py-2.5 px-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-muted mb-1.5">Currency</label>
-                      <select defaultValue="CAD" className="w-full bg-background border border-border rounded-xl py-2.5 px-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors">
-                        <option value="CAD">CAD - Canadian Dollar</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-muted mb-1.5">Min Withdrawal ($)</label>
-                      <input type="number" defaultValue={5} className="w-full bg-background border border-border rounded-xl py-2.5 px-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors" min="1" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-muted mb-1.5">Referral Bonus ($)</label>
-                      <input type="number" defaultValue={5} className="w-full bg-background border border-border rounded-xl py-2.5 px-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors" min="0" step="0.5" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Notifications */}
-                <div className="bg-surface rounded-2xl p-5 border border-border">
-                  <h3 className="font-bold text-foreground text-sm mb-4 flex items-center gap-2"><Activity size={16} className="text-accent-2" />Feature Toggles</h3>
-                  <div className="space-y-3">
-                    {[
-                      { label: "Daily Spin Wheel", desc: "Allow users to spin for free rewards", enabled: true },
-                      { label: "Referral Program", desc: "Enable referral bonuses for invites", enabled: true },
-                      { label: "Streak Rewards", desc: "Bonus for consecutive daily logins", enabled: true },
-                      { label: "New User Bonus", desc: "Welcome bonus for new signups", enabled: false },
-                      { label: "Maintenance Mode", desc: "Show maintenance page to non-admin users", enabled: false },
-                    ].map((feature) => (
-                      <div key={feature.label} className="flex items-center justify-between p-3 bg-surface-light rounded-xl border border-border">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{feature.label}</p>
-                          <p className="text-[10px] text-muted">{feature.desc}</p>
-                        </div>
-                        <button className={`w-10 h-5.5 rounded-full transition-colors relative ${feature.enabled ? "bg-primary" : "bg-border"}`}>
-                          <div className={`absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white shadow transition-transform ${feature.enabled ? "translate-x-5" : "translate-x-0.5"}`} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Danger Zone */}
-                <div className="bg-surface rounded-2xl p-5 border border-danger/20">
-                  <h3 className="font-bold text-danger text-sm mb-4 flex items-center gap-2"><AlertCircle size={16} />Danger Zone</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-danger/5 rounded-xl border border-danger/10">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">Re-seed Database</p>
-                        <p className="text-[10px] text-muted">Reset demo data (admin + demo user + offers)</p>
-                      </div>
-                      <button onClick={async () => {
-                        if (!confirm("Re-seed the database? This will add demo data.")) return;
-                        const res = await fetch("/api/admin/seed", { method: "POST" });
-                        if (res.ok) { setSuccess("Database seeded!"); setTimeout(() => setSuccess(""), 2000); await fetchStats(); await fetchOffers(); await fetchUsers(); }
-                      }}
-                        className="px-3 py-1.5 bg-danger/10 text-danger text-xs font-bold rounded-lg hover:bg-danger/20 transition-colors press-scale">
-                        Re-seed
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+            <SettingsTab
+              onSuccess={(msg) => { setSuccess(msg); setTimeout(() => setSuccess(""), 2000); }}
+              onError={(msg) => setError(msg)}
+              onReseed={async () => {
+                if (!confirm("Re-seed the database? This will add demo data.")) return;
+                const res = await fetch("/api/admin/seed", { method: "POST" });
+                if (res.ok) { setSuccess("Database seeded!"); setTimeout(() => setSuccess(""), 2000); await fetchStats(); await fetchOffers(); await fetchUsers(); }
+              }}
+            />
           )}
           {/* ═══════════════════════════════════════ */}
           {/* ══════ DOCS TAB ══════ */}
@@ -1108,11 +1140,8 @@ export default function AdminPage() {
               <div className="bg-surface rounded-2xl p-5 border border-border">
                 <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Crown size={16} className="text-accent-2" />Demo Accounts</h3>
                 <div className="text-sm text-muted space-y-2">
-                  <div className="bg-surface-light rounded-xl p-3 border border-border font-mono text-xs space-y-1">
-                    <p><strong>Admin:</strong> admin@cashblitz.com / admin123</p>
-                    <p><strong>Demo User:</strong> demo@cashblitz.com / demo123</p>
-                  </div>
-                  <p>Use the &quot;Re-seed Database&quot; button in Settings to reset demo data if needed.</p>
+                  <p>Demo accounts are created by the seed script. Use the &quot;Re-seed Database&quot; button in Settings to reset demo data.</p>
+                  <p>Credentials are stored securely — check your deployment environment variables or ask the project admin for access.</p>
                 </div>
               </div>
             </motion.div>

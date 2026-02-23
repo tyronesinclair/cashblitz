@@ -39,9 +39,6 @@ export default function OfferCard({ offer, onPlay, onInfo, index, featured }: Of
 
           {/* Rating badge top-left */}
           <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/65 backdrop-blur-sm rounded-lg px-2 py-1">
-            <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center">
-              <span className="text-[7px] font-bold text-white">A</span>
-            </div>
             <span className="text-xs font-bold text-white">{offer.rating}</span>
             <Star size={10} className="text-yellow-400 fill-yellow-400" />
           </div>
@@ -72,10 +69,12 @@ export default function OfferCard({ offer, onPlay, onInfo, index, featured }: Of
             </div>
           )}
 
-          {/* Carousel arrow hint */}
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center">
-            <span className="text-white text-xs">&#8250;</span>
-          </div>
+          {/* Carousel arrow hint — only for featured cards */}
+          {featured && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center">
+              <span className="text-white text-xs">&#8250;</span>
+            </div>
+          )}
         </div>
       </button>
 
