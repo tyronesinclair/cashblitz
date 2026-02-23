@@ -1074,8 +1074,9 @@ export default function AdminPage() {
               <div className="bg-surface rounded-2xl p-5 border border-border">
                 <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Users size={16} className="text-primary" />Referral System</h3>
                 <div className="text-sm text-muted space-y-2 leading-relaxed">
-                  <p><strong className="text-foreground">How it works:</strong> Each user gets a unique referral code (auto-generated). Share link: /signup?ref=CODE.</p>
-                  <p><strong className="text-foreground">Bonus:</strong> Configurable referral bonus (C$1.00 default) when referred user completes their first offer.</p>
+                  <p><strong className="text-foreground">How it works:</strong> Each user gets a unique referral code (auto-generated on signup). Share link: /signup?ref=CODE.</p>
+                  <p><strong className="text-foreground">Signup Flow:</strong> When a user signs up via /signup?ref=CODE, the signup page captures the code from the URL, passes it to the API, and creates a pending Referral record linking the new user to their referrer.</p>
+                  <p><strong className="text-foreground">Bonus:</strong> Configurable referral bonus (default C$5.00, adjustable in Settings) when referred user completes their first offer.</p>
                   <p><strong className="text-foreground">Tracking:</strong> Referral model tracks referrer, referee, status (pending/completed), and bonus amount.</p>
                 </div>
               </div>
@@ -1112,6 +1113,8 @@ export default function AdminPage() {
                     <p>PUT  /api/admin/users/[id] — Update user (role, balance, ban)</p>
                     <p>GET  /api/admin/payouts — List payouts (filterable)</p>
                     <p>PUT  /api/admin/payouts — Update payout status</p>
+                    <p>GET  /api/admin/settings — Read runtime settings</p>
+                    <p>PUT  /api/admin/settings — Update runtime settings</p>
                     <p>POST /api/admin/seed — Re-seed demo data</p>
                   </div>
                 </div>

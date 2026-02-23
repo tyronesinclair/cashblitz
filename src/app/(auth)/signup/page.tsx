@@ -1,12 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Zap, Mail, Lock, Eye, EyeOff, AlertCircle, User, Check } from "lucide-react";
+import { Zap, Mail, Lock, Eye, EyeOff, AlertCircle, User, Check, Gift } from "lucide-react";
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-dvh bg-background flex items-center justify-center">
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary-dark animate-pulse" />
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function SignupForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,6 +26,8 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const referralCode = searchParams.get("ref") || "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +38,7 @@ export default function SignupPage() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, referralCode: referralCode || undefined }),
       });
 
       const data = await res.json();
@@ -91,6 +105,13 @@ export default function SignupPage() {
           <p className="text-sm text-muted text-center mb-6">
             Join 150K+ users earning real cash
           </p>
+
+          {referralCode && (
+            <div className="flex items-center justify-center gap-2 p-2.5 bg-primary/10 border border-primary/20 rounded-xl mb-4">
+              <Gift size={14} className="text-primary" />
+              <span className="text-xs font-semibold text-primary">Referred by a friend — you both earn a bonus!</span>
+            </div>
+          )}
 
           {error && (
             <motion.div

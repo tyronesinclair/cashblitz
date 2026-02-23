@@ -30,21 +30,28 @@ A full-stack cash rewards platform inspired by Freecash/AttaPoll where users ear
 - **Daily Login Bonus** — 7-day escalating reward calendar ($0.05 to $2.00). Streak resets if a day is missed
 - **Cashout System** — Withdraw via PayPal, Visa, Amazon, Bitcoin, Apple, or Steam gift cards. Zero fees. Full payout history
 - **XP & Level System** — Earn XP from spins, daily bonuses, and activities. 6 tiers: Rookie, Bronze, Silver, Gold, Platinum, Diamond
-- **Referral Program** — Unique referral codes, share links, track referral stats and earnings
+- **Referral Program** — Unique referral codes auto-generated on signup, share links (`/signup?ref=CODE`), track referral stats and earnings. Referral banner visible on referral code URL signup
 - **Achievements** — Unlock badges for milestones (first offer, 7-day streak, $100 earned, etc.)
-- **Transaction History** — Complete audit trail of all balance changes with filtering
+- **Transaction History** — Complete audit trail of all balance changes with type filtering
 - **Notifications** — Real-time in-app notification system with unread count badge
 - **Live Activity Feed** — Social proof showing recent platform activity
-- **Onboarding** — 4-step walkthrough for first-time users
+- **Onboarding** — 4-step walkthrough for first-time users with keyboard accessibility (Escape to dismiss)
 - **Responsive Design** — Full mobile + desktop layout with sidebar nav (desktop) and bottom tab bar (mobile)
 
 ### Admin Features (at /admin)
-- **Dashboard** — User count, offer stats, total earnings, active offers, recent signups, top earners
-- **Offer Management** — Full CRUD for offers with multi-step rewards, flags, external URLs
-- **User Management** — View/search users, adjust balance, change roles, ban users
-- **Payout Processing** — Approve/reject/process withdrawal requests. Rejections auto-refund
-- **Settings** — Site name, currency, min withdrawal, feature toggles, danger zone (re-seed)
+- **Dashboard** — User count, offer stats, total earnings, active offers, pending payouts, recent signups, top earners, conversion rate
+- **Offer Management** — Full CRUD for offers with multi-step rewards, flags (premium/hot/new/active), external URLs
+- **User Management** — View/search/filter users, adjust balance with audit trail, change roles, ban users
+- **Payout Processing** — Approve/reject/process withdrawal requests. Rejections auto-refund with transaction record and notification
+- **Settings** — Persistent site name, min withdrawal, referral bonus (stored in AppConfig via API). Danger zone with re-seed option
 - **Documentation** — Comprehensive in-app docs tab covering all platform features, APIs, and database models
+
+### Security & Robustness
+- **Atomic Transactions** — All financial operations use `prisma.$transaction` for atomicity
+- **Audit Trail** — Admin balance changes create Transaction records tracking who made the change
+- **Error Handling** — All admin API routes wrapped in try-catch with 500 error responses
+- **Modal Accessibility** — All modals have `role="dialog"`, `aria-modal="true"`, and Escape key handlers
+- **Server-Side Prize** — Spin wheel prize determined server-side with weighted random
 
 ---
 
@@ -55,13 +62,15 @@ src/
   app/
     page.tsx                    # Landing page (Freecash-inspired)
     about/page.tsx              # About/overview page
-    login/page.tsx              # Login page
-    signup/page.tsx             # Signup page
+    (auth)/login/page.tsx       # Login page
+    (auth)/signup/page.tsx      # Signup page (captures ?ref=CODE for referrals)
     dashboard/page.tsx          # Main dashboard with 4 tabs
     admin/page.tsx              # Admin panel with 6 tabs
+    privacy/page.tsx            # Privacy policy
+    terms/page.tsx              # Terms of service
     api/
       auth/[...nextauth]/       # NextAuth.js handler
-      auth/signup/               # User registration
+      auth/signup/               # User registration (with referral code support)
       offers/                    # List active offers
       offers/[id]/start/         # Start an offer (creates UserOffer)
       user/balance/              # User balance, streak, level, XP
@@ -74,21 +83,25 @@ src/
       referral/                  # Referral code + stats
       admin/stats/               # Admin dashboard statistics
       admin/offers/              # Admin offer CRUD
-      admin/users/               # Admin user management
+      admin/offers/[id]/         # Admin offer get/update/delete
+      admin/users/               # Admin user list
+      admin/users/[id]/          # Admin user update (with audit trail)
       admin/payouts/             # Admin payout processing
+      admin/settings/            # Admin settings API (AppConfig CRUD)
       admin/seed/                # Database seeding
   components/
-    EarnPage.tsx                # Offer wall with filters, sort, spin button
+    EarnPage.tsx                # Offer wall with filters, sort, spin button, referral banner
     OfferCard.tsx               # Individual offer card component
-    OfferModal.tsx              # Offer detail modal with start functionality
+    OfferModal.tsx              # Offer detail modal with accessibility
     SpinWheel.tsx               # Animated spin wheel with API integration
     CashoutPage.tsx             # Withdrawal form with real balance
     MyOffersPage.tsx            # Active/completed offers tracking
     RewardsPage.tsx             # Profile, daily bonus, achievements, levels
-    OnboardingModal.tsx         # First-time user walkthrough
+    OnboardingModal.tsx         # First-time user walkthrough (accessible)
     ReferralCard.tsx            # Referral link, copy, share, stats
     TransactionHistory.tsx      # Filtered transaction list
     LiveActivityFeed.tsx        # Social proof activity feed
+    BottomNav.tsx               # Mobile bottom navigation
   lib/
     auth.ts                     # NextAuth config + isAdmin/getAuthUserId helpers
     db.ts                       # Prisma client (lazy init via Proxy)
@@ -112,14 +125,14 @@ prisma/
 | **OfferReward** | Individual reward steps per offer |
 | **UserOffer** | Tracks which users started/completed which offers |
 | **Payout** | Withdrawal requests with status (pending/processing/completed/rejected) |
-| **Transaction** | Full audit log of all balance changes |
+| **Transaction** | Full audit log of all balance changes (type, amount, balanceBefore/After, metadata) |
 | **DailyReward** | Daily login bonus claim records |
 | **DailySpin** | Spin wheel prize records |
 | **Referral** | Referrer/referee relationships and bonus tracking |
 | **Notification** | In-app notifications (reward, system, cashout, offer) |
 | **Achievement** | Achievement definitions |
 | **UserAchievement** | Which users unlocked which achievements |
-| **AppConfig** | Key/value config store for runtime settings |
+| **AppConfig** | Key/value config store for runtime settings (siteName, minWithdrawal, referralBonus) |
 
 ---
 
@@ -129,6 +142,7 @@ prisma/
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| POST | `/api/auth/signup` | Register new user (supports `referralCode` for referral tracking) |
 | GET | `/api/offers` | List all active offers |
 | POST | `/api/offers/[id]/start` | Start an offer (creates UserOffer with trackingId) |
 | GET | `/api/user/balance` | User balance, streak, level, XP, active offer count |
@@ -148,12 +162,13 @@ prisma/
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/admin/stats` | Dashboard statistics |
+| GET | `/api/admin/stats` | Dashboard statistics (users, offers, earnings, payouts, referrals, spins) |
 | GET/POST | `/api/admin/offers` | List/create offers |
-| PUT/DELETE | `/api/admin/offers/[id]` | Update/delete offer |
-| GET | `/api/admin/users` | List all users |
-| PUT | `/api/admin/users/[id]` | Update user (role, balance, ban) |
-| GET/PUT | `/api/admin/payouts` | List/update payout status |
+| GET/PUT/DELETE | `/api/admin/offers/[id]` | Get/update/delete offer |
+| GET | `/api/admin/users` | List users (search, filter, paginate, sort) |
+| PUT | `/api/admin/users/[id]` | Update user (role, balance, ban) with audit trail |
+| GET/PUT | `/api/admin/payouts` | List/update payout status (with auto-refund on reject) |
+| GET/PUT | `/api/admin/settings` | Read/write runtime settings (AppConfig) |
 | POST | `/api/admin/seed` | Re-seed demo data |
 
 ---
@@ -273,6 +288,8 @@ npm start
 | Admin | admin@cashblitz.com | admin123 | admin |
 | Demo User | demo@cashblitz.com | demo123 | user |
 
+These accounts are created by the seed script. Use the admin panel's Settings > Re-seed Database to recreate them.
+
 ---
 
 ## Deployment (Railway)
@@ -294,11 +311,16 @@ The project is configured for Railway with a Dockerfile:
 ## Architecture Decisions
 
 - **JWT Balance Refresh:** The JWT callback always queries the DB for the latest balance/role/streak to prevent stale session data
-- **Atomic Transactions:** All financial operations (cashout, spin, daily bonus) use `prisma.$transaction` for atomicity
+- **Atomic Transactions:** All financial operations (cashout, spin, daily bonus, admin adjustments) use `prisma.$transaction` for atomicity
 - **Server-Side Spin:** Prize is determined server-side with weighted random — client only animates
 - **Lazy Prisma Init:** Uses JavaScript Proxy pattern for lazy initialization to prevent build-time DB connection errors
 - **Force Dynamic:** All API routes use `export const dynamic = "force-dynamic"` to prevent static rendering
 - **UTC Date Comparison:** All daily cooldowns use UTC dates for timezone-agnostic behavior
+- **Admin Audit Trail:** Balance changes via admin panel create Transaction records with admin user ID in metadata
+- **Referral Flow:** Signup URL `?ref=CODE` → signup page captures code → API creates Referral record → bonus awarded on first completed offer
+- **Error Handling:** All API routes wrapped in try-catch with consistent 500 error responses
+- **Modal Accessibility:** All modal components use `role="dialog"`, `aria-modal="true"`, and Escape key dismissal
+- **Suspense Boundaries:** Pages using `useSearchParams` (signup) are wrapped in Suspense for Next.js compatibility
 
 ---
 
