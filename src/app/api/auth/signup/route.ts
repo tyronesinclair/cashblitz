@@ -28,9 +28,9 @@ export async function POST(req: NextRequest) {
 
     // Look up referrer if a referral code was provided
     let referrerId: string | null = null;
-    if (referralCode) {
+    if (referralCode && typeof referralCode === "string" && referralCode.length <= 20) {
       const referrer = await prisma.user.findUnique({
-        where: { referralCode: referralCode as string },
+        where: { referralCode },
         select: { id: true },
       });
       if (referrer) {

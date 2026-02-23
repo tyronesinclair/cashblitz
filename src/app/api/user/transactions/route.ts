@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type"); // earn | withdraw | spin | referral | daily_bonus | all
-  const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
-  const offset = parseInt(searchParams.get("offset") || "0");
+  const limit = Math.min(Math.max(1, parseInt(searchParams.get("limit") || "20") || 20), 100);
+  const offset = Math.max(0, parseInt(searchParams.get("offset") || "0") || 0);
 
   const where: Record<string, unknown> = { userId: session.user.id };
   if (type && type !== "all") {

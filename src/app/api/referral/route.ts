@@ -39,7 +39,7 @@ export async function GET() {
 
   return NextResponse.json({
     referralCode: user!.referralCode,
-    referralLink: `${process.env.NEXTAUTH_URL || "https://cashblitz-app-production.up.railway.app"}/signup?ref=${user!.referralCode}`,
+    referralLink: `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/signup?ref=${user!.referralCode}`,
     totalReferrals,
     completedReferrals,
     totalEarned: totalEarned._sum.bonusAmount || 0,

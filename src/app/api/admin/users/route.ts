@@ -9,12 +9,16 @@ export async function GET(req: NextRequest) {
     if (!(await isAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1") || 1);
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get("limit") || "20") || 20), 100);
     const search = searchParams.get("search") || "";
     const role = searchParams.get("role") || "";
-    const sortBy = searchParams.get("sortBy") || "createdAt";
-    const sortOrder = searchParams.get("sortOrder") || "desc";
+
+    const VALID_SORT_FIELDS = ["createdAt", "name", "email", "balance", "totalEarnings"];
+    const rawSortBy = searchParams.get("sortBy") || "createdAt";
+    const sortBy = VALID_SORT_FIELDS.includes(rawSortBy) ? rawSortBy : "createdAt";
+    const rawSortOrder = searchParams.get("sortOrder") || "desc";
+    const sortOrder = rawSortOrder === "asc" ? "asc" : "desc";
 
     const where: Record<string, unknown> = {};
     if (search) {

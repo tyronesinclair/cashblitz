@@ -36,6 +36,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
     }
 
+    const MAX_WITHDRAWAL = 10000;
+    if (parsedAmount > MAX_WITHDRAWAL) {
+      return NextResponse.json({ error: `Maximum withdrawal is C$${MAX_WITHDRAWAL}` }, { status: 400 });
+    }
+
     const minAmount = MIN_AMOUNTS[method] || 5;
     if (parsedAmount < minAmount) {
       return NextResponse.json(

@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const limit = Math.max(1, parseInt(searchParams.get("limit") || "20") || 20);
   const unreadOnly = searchParams.get("unread") === "true";
 
   const where: Record<string, unknown> = { userId: session.user.id };
